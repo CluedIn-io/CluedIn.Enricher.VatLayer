@@ -4,7 +4,7 @@ Template containing common files and folder structure for creating new C# reposi
 
 ## Simple Usage
 
-To create a Git repository for a new C# project follow the steps below:
+1. To create a Git repository for a new C# project follow the steps below
 
 ```Shell
 # Clone the CSharp template repository and step into the new folder
@@ -15,7 +15,15 @@ cd CluedIn.ProjectName
 git remote rename origin template
 ```
 
-Create the CluedIn.ProjectName repository under the CluedIn organization in GitHub then perform the following steps:
+1. Rename the Visual Studio solution in the root folder
+
+    ```Shell
+    ren CluedIn.CSharp.Template.sln CluedIn.ProjectName.sln
+    ```
+
+1. Create the CluedIn.ProjectName repository under the CluedIn organization in GitHub
+
+1. Set the new GitHub repository as the _origin_ remote and push your changes
 
 ```Shell
 # Add the new GitHub repository as the origin remote
