@@ -1,6 +1,6 @@
-# CluedIn Crawling Template
+# CluedIn.CSharp.Template
 
-Template repository containing common files and folder structure for extracting crawlers into their own repository.
+Template containing common files and folder structure for creating new C# repositories.
 
 TODO build status
 
