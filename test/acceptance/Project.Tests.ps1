@@ -69,7 +69,7 @@ Describe 'Project Tests' -Tags 'Acceptance' , 'Quality' {
 
                 $externalProjectReferences | ForEach-Object {
 
-                    $pattern = "<ProjectReference .*..\\$_.+.csproj"
+                    $pattern = "<ProjectReference .*..\\$_.csproj"
 
                     It "Project references for $_ not present in $projectFile" {
 
