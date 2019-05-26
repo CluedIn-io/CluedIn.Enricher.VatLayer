@@ -44,7 +44,9 @@ Describe 'Project Tests' -Tags 'Acceptance' , 'Quality' {
                 $removedPatterns = @(
                     'HintPath' ,
                     'packages.config' ,
-                    'SpecificVersion'
+                    'SpecificVersion' ,
+                    '<Company>' ,
+                    '<Copyright>'
                 )
 
                 $removedPatterns | ForEach-Object {
