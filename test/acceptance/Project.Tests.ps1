@@ -58,6 +58,24 @@ Describe 'Project Tests' -Tags 'Acceptance' , 'Quality' {
                                 Should -BeNullOrEmpty
                     }
                 }
+
+                $externalProjectReferences = @(
+                    'Core' ,
+                    'Core.Agent' ,
+                    'Crawling'
+                )
+
+                $externalProjectReferences | ForEach-Object {
+
+                    $pattern = "<ProjectReference .*..\\$_.+.csproj"
+
+                    It "Project references for $_ not present in $projectFile" {
+
+                        Get-Content $projectFile |
+                            Select-String -Pattern $pattern |
+                                Should -BeNullOrEmpty
+                    }
+                }
             }
         }
     }
