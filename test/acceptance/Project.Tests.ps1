@@ -44,7 +44,9 @@ Describe 'Project Tests' -Tags 'Acceptance' , 'Quality' {
                 $removedPatterns = @(
                     'HintPath' ,
                     'packages.config' ,
-                    'SpecificVersion'
+                    'SpecificVersion' ,
+                    '<Company>' ,
+                    '<Copyright>'
                 )
 
                 $removedPatterns | ForEach-Object {
@@ -55,6 +57,24 @@ Describe 'Project Tests' -Tags 'Acceptance' , 'Quality' {
 
                         Get-Content $projectFile |
                             Select-String -SimpleMatch $pattern |
+                                Should -BeNullOrEmpty
+                    }
+                }
+
+                $externalProjectReferences = @(
+                    'Core' ,
+                    'Core.Agent' ,
+                    'Crawling'
+                )
+
+                $externalProjectReferences | ForEach-Object {
+
+                    $pattern = "<ProjectReference .*..\\$_.csproj"
+
+                    It "Project references for $_ not present in $projectFile" {
+
+                        Get-Content $projectFile |
+                            Select-String -Pattern $pattern |
                                 Should -BeNullOrEmpty
                     }
                 }
