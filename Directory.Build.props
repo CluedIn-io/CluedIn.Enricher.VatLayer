@@ -5,7 +5,7 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <NoWarn />
     <ErrorReport>prompt</ErrorReport>
-    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
 
   <PropertyGroup>
