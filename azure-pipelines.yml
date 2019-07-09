@@ -59,11 +59,22 @@ jobs:
     inputs:
       command: 'build'
 
-  # Unit and Integration Test
+  # Unit Test
   - task: DotNetCoreCLI@2
-    displayName: 'Run Unit and Integration tests'
+    displayName: 'Run Unit tests'
     inputs:
       command: 'test'
+      projects: 'test/unit/**/*.csproj'
+      arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) /p:CollectCoverage=true /p:Exclude="[xunit.*]*%2c[*.Test]*" --filter Unit'
+
+# TODO restore integration tests when Docker environment is available
+  # # Integration Test
+  # - task: DotNetCoreCLI@2
+  #   displayName: 'Run Integration tests'
+  #   inputs:
+  #     command: 'test'
+  #     projects: 'test/integration/**/*.csproj'
+  #     arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)  /p:CollectCoverage=true /p:Exclude="[xunit.*]*%2c[*.Test]*" --filter Integration'
 
   # Acceptance Test
   - task: richardfennellBM.BM-VSTS-PesterRunner-Task.Pester-Task.Pester@8
@@ -90,20 +101,19 @@ jobs:
       artifactName: 'Nuget'
       targetPath: $(Build.ArtifactStagingDirectory)
 
+  # Push NuGet packages to Develop
+  - task: NuGetCommand@2
+    displayName: 'Push to develop feed'
+    condition: and ( succeeded(), in(variables['Build.SourceBranch'], 'refs/heads/develop'))
+    inputs:
+      command: 'push'
+      packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'
+      allowPackageConflicts: true
+      publishVstsFeed: 'develop'
+      includeSymbols: true
 
-  # TODO de-comment NuGet package push to develop and release fields when crawler has been migrated
-  # # Push NuGet packages to Develop
-  # - task: NuGetCommand@2
-  #   displayName: 'Push to develop feed'
-  #   condition: and ( succeeded(), in(variables['Build.SourceBranch'], 'refs/heads/develop'))
-  #   inputs:
-  #     command: 'push'
-  #     packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg'
-  #     allowPackageConflicts: true
-  #     publishVstsFeed: 'develop'
-  #     includeSymbols: true
-
-  # # Push NuGet packages to Release
+  # TODO restore once master branch creates valid packages for release
+  # Push NuGet packages to Release
   # - task: NuGetCommand@2
   #   displayName: 'Push to release feed'
   #   condition: and ( succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/heads/master'))
