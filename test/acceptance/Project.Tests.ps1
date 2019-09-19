@@ -61,9 +61,7 @@ Describe 'Project Tests' -Tags 'Acceptance' , 'Quality' {
                 }
 
                 $externalProjectReferences = @(
-                    'Core' ,
-                    'Core.Agent' ,
-                    'Crawling'
+                    'ExternalSearch'
                 )
 
                 $externalProjectReferences | ForEach-Object {

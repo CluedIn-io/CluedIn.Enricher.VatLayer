@@ -48,7 +48,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Git", "Git", "{17EE3C8D-BAE
 		.gitignore = .gitignore
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExternalSearch.Providers.VatLayer", "src\ExternalSearch.Providers.VatLayer.csproj", "{BD49FBC7-7E7B-410C-BBB4-F3B0E3293541}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BD49FBC7-7E7B-410C-BBB4-F3B0E3293541}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD49FBC7-7E7B-410C-BBB4-F3B0E3293541}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD49FBC7-7E7B-410C-BBB4-F3B0E3293541}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD49FBC7-7E7B-410C-BBB4-F3B0E3293541}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
@@ -60,6 +72,7 @@ Global
 		{02641789-0D38-4DBB-9288-23592CF55D25} = {9BD54E81-D9C8-4419-82B8-8EE6CC7E2647}
 		{2C3AECCF-DCB5-4ED7-8B7B-8F373EDE3A5E} = {9BD54E81-D9C8-4419-82B8-8EE6CC7E2647}
 		{17EE3C8D-BAE4-481A-B9CC-1BE878E86124} = {9BD54E81-D9C8-4419-82B8-8EE6CC7E2647}
+		{BD49FBC7-7E7B-410C-BBB4-F3B0E3293541} = {B2A52533-7FBF-41FE-A0AF-874FC54300B2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6A61CB42-80C5-4A83-AC3E-DA41FC875525}
