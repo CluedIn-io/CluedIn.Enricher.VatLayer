@@ -79,7 +79,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             foreach (var value in vatNumber.Where(v => !vatFilter(v)))
             {
                 var sanitizedValue = value.Replace(" ", "");
-                yield return new ExternalSearchQuery(this, entityType, ExternalSearchQueryParameter.Identifier, value);
+                //yield return new ExternalSearchQuery(this, entityType, ExternalSearchQueryParameter.Identifier, value);
                 if (Regex.IsMatch(sanitizedValue.ToUpper(), @"[A-Z]{2}\d+"))
                     yield return new ExternalSearchQuery(this, entityType, ExternalSearchQueryParameter.Identifier, sanitizedValue);
             }

@@ -30,8 +30,8 @@ resources:
       endpoint: 'CluedIn-io'
 
 pool:
-  vmImage: 'VS2017-Win2016'
-  
+  vmImage: 'windows-latest'
+
 variables:
   Dotnet.Skip.First.Time.Experience: 'True'
   testFolderPath: '$(Build.SourcesDirectory)/test'
