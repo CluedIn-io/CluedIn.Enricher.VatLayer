@@ -16,7 +16,7 @@
   </PropertyGroup>
     <ItemGroup>
     <PackageReference Include="CluedIn.ExternalSearch">
-      <Version>2.4.0-alpha0089</Version>
+      <Version>2.4.0-alpha0100</Version>
     </PackageReference>
     <PackageReference Include="MediaToolkit">
       <Version>1.1.0.1</Version>
