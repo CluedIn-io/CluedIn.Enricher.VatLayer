@@ -8,6 +8,7 @@ using CluedIn.Core.Data;
 using CluedIn.Core.Data.Parts;
 using CluedIn.Core.ExternalSearch;
 using CluedIn.ExternalSearch.Providers.VatLayer.Models;
+using CluedIn.ExternalSearch.Providers.VatLayer.Utility;
 using CluedIn.ExternalSearch.Providers.VatLayer.Vocabularies;
 using Newtonsoft.Json;
 using RestSharp;
@@ -78,9 +79,9 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
             foreach (var value in vatNumber.Where(v => !vatFilter(v)))
             {
-                var sanitizedValue = value.Replace(" ", "");
+                var cleaner = new VatNumberCleaner();
+                var sanitizedValue = cleaner.CheckVATNumber(value);
                 //yield return new ExternalSearchQuery(this, entityType, ExternalSearchQueryParameter.Identifier, value);
-                if (Regex.IsMatch(sanitizedValue.ToUpper(), @"[A-Z]{2}\d+"))
                     yield return new ExternalSearchQuery(this, entityType, ExternalSearchQueryParameter.Identifier, sanitizedValue);
             }
         }
