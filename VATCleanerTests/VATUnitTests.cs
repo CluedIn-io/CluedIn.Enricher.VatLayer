@@ -95,6 +95,8 @@ namespace VATCleanerTests
             Assert.AreEqual(expected, actual);
         }
 
+       
+
         [TestMethod]
         public void TestBGCheckDigit()
         {
@@ -359,6 +361,62 @@ namespace VATCleanerTests
             var expected = true;
             var call = new VatNumberCleaner();
             var actual = call.HUVATCheckDigit(VatNumber);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+
+        /*Example Customer Tests*/
+
+        [TestMethod]
+        public void TestCHEPattern()
+        {
+            var VatNumber = "CHE-108.315.241";
+            var call = new VatNumberCleaner();
+            var actual = call.CHEVATCheckDigit(VatNumber);
+
+            Assert.AreEqual("CHE108315241", actual);
+        }
+
+        [TestMethod]
+        public void TestFRPattern()
+        {
+            var VatNumber = "FR955 4201 6951";
+            var call = new VatNumberCleaner();
+            var actual = call.CHEVATCheckDigit(VatNumber);
+
+            Assert.AreEqual("FR95542016951", actual);
+        }
+
+        [TestMethod]
+        public void TestNLCheckDigit2()
+        {
+            var VatNumber = "NL802353794B01";
+            var expected = true;
+            var call = new VatNumberCleaner();
+            var actual = call.NLVATCheckDigit(VatNumber);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestSECheckDigit2()
+        {
+            var VatNumber = "SE556410328001";
+            var expected = true;
+            var call = new VatNumberCleaner();
+            var actual = call.NLVATCheckDigit(VatNumber);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestESBCheckDigit2()
+        {
+            var VatNumber = "ESB62131180";
+            var expected = true;
+            var call = new VatNumberCleaner();
+            var actual = call.NLVATCheckDigit(VatNumber);
 
             Assert.AreEqual(expected, actual);
         }
