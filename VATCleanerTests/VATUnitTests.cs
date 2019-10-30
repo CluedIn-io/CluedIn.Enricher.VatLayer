@@ -95,6 +95,8 @@ namespace VATCleanerTests
             Assert.AreEqual(expected, actual);
         }
 
+       
+
         [TestMethod]
         public void TestBGCheckDigit()
         {
@@ -359,6 +361,64 @@ namespace VATCleanerTests
             var expected = true;
             var call = new VatNumberCleaner();
             var actual = call.HUVATCheckDigit(VatNumber);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+
+        /*Example Customer Tests*/
+
+        // If you want to test for the whole VatNumber format(including country code) you call the CheckVATNumber function - returns string
+        // If you want to test for only the digit part of VatNumber, you can each individual country check digit function - returns bool
+
+        [TestMethod]
+        public void TestCHEPattern()
+        {
+            var VatNumber = "CHE-108.315.241";
+            var call = new VatNumberCleaner();
+            var actual = call.CheckVATNumber(VatNumber);
+
+            Assert.AreEqual("CHE108315241", actual);
+        }
+
+        [TestMethod]
+        public void TestFRPattern()
+        {
+            var VatNumber = "FR955 4201 6951";
+            var call = new VatNumberCleaner();
+            var actual = call.CheckVATNumber(VatNumber);
+
+            Assert.AreEqual("FR95542016951", actual);
+        }
+
+        [TestMethod]
+        public void TestNLCheckDigit2()
+        {
+            var VatNumber = "NL802353794B01";
+            var call = new VatNumberCleaner();
+            var actual = call.CheckVATNumber(VatNumber);
+
+            Assert.AreEqual("NL802353794B01", actual);
+        }
+
+        [TestMethod]
+        public void TestSECheckDigit2()
+        {
+            var VatNumber = "556410328001";
+            var expected = true;
+            var call = new VatNumberCleaner();
+            var actual = call.SEVATCheckDigit(VatNumber);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void TestESBCheckDigit2()
+        {
+            var VatNumber = "B62131180";
+            var expected = true;
+            var call = new VatNumberCleaner();
+            var actual = call.ESVATCheckDigit(VatNumber);
 
             Assert.AreEqual(expected, actual);
         }
