@@ -227,39 +227,28 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             return null;
         }
 
-        /// <summary>Creates the metadata.</summary>
-        /// <param name="resultItem">The result item.</param>
-        /// <returns>The metadata.</returns>
-        private IEntityMetadata CreateMetadata(IExternalSearchQueryResult<VatLayerResponse> resultItem)
+        private static IEntityMetadata CreateMetadata(IExternalSearchQueryResult<VatLayerResponse> resultItem)
         {
             var metadata = new EntityMetadataPart();
 
-            this.PopulateMetadata(metadata, resultItem);
+            PopulateMetadata(metadata, resultItem);
 
             return metadata;
         }
 
-        /// <summary>Gets the origin entity code.</summary>
-        /// <param name="resultItem">The result item.</param>
-        /// <returns>The origin entity code.</returns>
-        private EntityCode GetOriginEntityCode(IExternalSearchQueryResult<VatLayerResponse> resultItem)
+        private static EntityCode GetOriginEntityCode(IExternalSearchQueryResult<VatLayerResponse> resultItem)
         {
-            return new EntityCode(EntityType.Organization, this.GetCodeOrigin(), resultItem.Data.VatNumber);
+            return new EntityCode(EntityType.Organization, GetCodeOrigin(), resultItem.Data.VatNumber);
         }
 
-        /// <summary>Gets the code origin.</summary>
-        /// <returns>The code origin</returns>
-        private CodeOrigin GetCodeOrigin()
+        private static CodeOrigin GetCodeOrigin()
         {
             return CodeOrigin.CluedIn.CreateSpecific("vatlayer");
         }
 
-        /// <summary>Populates the metadata.</summary>
-        /// <param name="metadata">The metadata.</param>
-        /// <param name="resultItem">The result item.</param>
-        private void PopulateMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<VatLayerResponse> resultItem)
+        private static void PopulateMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<VatLayerResponse> resultItem)
         {
-            var code = this.GetOriginEntityCode(resultItem);
+            var code = GetOriginEntityCode(resultItem);
 
             metadata.EntityType         = EntityType.Organization;
             metadata.Name               = resultItem.Data.CompanyName;
