@@ -61,7 +61,15 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         /// <returns>The search queries.</returns>
         public override IEnumerable<IExternalSearchQuery> BuildQueries(ExecutionContext context, IExternalSearchRequest request)
         {
-            if (string.IsNullOrEmpty(this.TokenProvider?.ApiToken))
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
                 throw new InvalidOperationException("ApiToken for VatLayer must be provided.");
 
             if (!this.Accepts(request.EntityMetaData.EntityType))
@@ -92,6 +100,15 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         /// <returns>The results.</returns>
         public override IEnumerable<IExternalSearchQueryResult> ExecuteSearch(ExecutionContext context, IExternalSearchQuery query)
         {
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            if (query == null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
             var vat = query.QueryParameters[ExternalSearchQueryParameter.Identifier].FirstOrDefault();
 
             if (string.IsNullOrEmpty(vat))
@@ -129,7 +146,30 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         /// <param name="result">The result.</param>
         /// <param name="request">The request.</param>
         /// <returns>The clues.</returns>
-        public override IEnumerable<Clue> BuildClues(ExecutionContext context, IExternalSearchQuery query, IExternalSearchQueryResult result, IExternalSearchRequest request)
+        public override IEnumerable<Clue> BuildClues(ExecutionContext context,
+            IExternalSearchQuery query,
+            IExternalSearchQueryResult result,
+            IExternalSearchRequest request)
+        {
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            if (query == null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
+
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
         {
             var resultItem  = result.As<VatLayerResponse>();
             var code        = this.GetOriginEntityCode(resultItem);
@@ -145,7 +185,24 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         /// <param name="result">The result.</param>
         /// <param name="request">The request.</param>
         /// <returns>The primary entity metadata.</returns>
-        public override IEntityMetadata GetPrimaryEntityMetadata(ExecutionContext context, IExternalSearchQueryResult result, IExternalSearchRequest request)
+        public override IEntityMetadata GetPrimaryEntityMetadata(ExecutionContext context,
+            IExternalSearchQueryResult result,
+            IExternalSearchRequest request)
+        {
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
+
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
         {
             var resultItem = result.As<VatLayerResponse>();
             return this.CreateMetadata(resultItem);
@@ -158,6 +215,15 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         /// <returns>The preview image.</returns>
         public override IPreviewImage GetPrimaryEntityPreviewImage(ExecutionContext context, IExternalSearchQueryResult result, IExternalSearchRequest request)
         {
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
             return null;
         }
 
