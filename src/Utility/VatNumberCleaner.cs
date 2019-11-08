@@ -198,7 +198,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer.Utility
                 }
             }
 
-            var match = Regex.Match(vatnumber, "(^\\d\\d[0-5]\\d[0-3]\\d\\d{4}$");
+            var match = Regex.Match(vatnumber, "(^\\d\\d[0-5]\\d[0-3]\\d\\d{4}$)");
             var multipliers = new int[]{
                         2, 4, 8, 5, 10, 9, 7, 3, 6
                     };
