@@ -129,7 +129,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                             }
 
                             context.Log.Info(() =>
-                                $"External search query produced, Identifier: '{ExternalSearchQueryParameter.Identifier}' EntityType: '{entityType.Code}' Value: '{sanitizedValue}'");
+                                $"External search query produced, ExternalSearchQueryParameter: '{ExternalSearchQueryParameter.Identifier}' EntityType: '{entityType.Code}' Value: '{sanitizedValue}'");
 
                             yield return new ExternalSearchQuery(this, entityType, ExternalSearchQueryParameter.Identifier,
                                 sanitizedValue);
