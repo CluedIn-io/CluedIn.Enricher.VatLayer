@@ -86,7 +86,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 if (!Accepts(request.EntityMetaData.EntityType))
                 {
                     context.Log.Verbose(() =>
-                        $"Unacceptable entity type from {request.EntityMetaData.DisplayName}, entity code {request.EntityMetaData.EntityType.Code}");
+                        $"Unacceptable entity type from '{request.EntityMetaData.DisplayName}', entity code '{request.EntityMetaData.EntityType.Code}'");
 
                     yield break;
                 }
@@ -104,7 +104,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 if (!vatNumber.Any())
                 {
                     context.Log.Verbose(() =>
-                        $"No query parameter for {Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber} in request, skipping build queries");
+                        $"No query parameter for '{Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber}' in request, skipping build queries");
                 }
                 else
                 {
@@ -113,7 +113,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     if (!filteredValues.Any())
                     {
                         context.Log.Warn(() =>
-                            $"Filter removed all VAT numbers, skipping processing. Original {string.Join(",", vatNumber)}");
+                            $"Filter removed all VAT numbers, skipping processing. Original '{string.Join(",", vatNumber)}'");
                     }
                     else
                     {
@@ -125,11 +125,11 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                             if (value != sanitizedValue)
                             {
                                 context.Log.Verbose(() =>
-                                    $"Sanitized VAT number. Original {value}, Updated {sanitizedValue}");
+                                    $"Sanitized VAT number. Original '{value}', Updated '{sanitizedValue}'");
                             }
 
                             context.Log.Info(() =>
-                                $"External search query produced, Identifier: {ExternalSearchQueryParameter.Identifier} EntityType: {entityType.Code} Value: {sanitizedValue}");
+                                $"External search query produced, Identifier: '{ExternalSearchQueryParameter.Identifier}' EntityType: '{entityType.Code}' Value: '{sanitizedValue}'");
 
                             yield return new ExternalSearchQuery(this, entityType, ExternalSearchQueryParameter.Identifier,
                                 sanitizedValue);
@@ -137,7 +137,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     }
 
                     context.Log.Verbose(() =>
-                        $"Finished building queries for {request.EntityMetaData.Name}");
+                        $"Finished building queries for '{request.EntityMetaData.Name}'");
                 }
             }
         }
@@ -168,14 +168,14 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 }
 
                 context.Log.Verbose(() =>
-                    $"Starting external search for Id: {query.Id} QueryKey: {query.QueryKey}");
+                    $"Starting external search for Id: '{query.Id}' QueryKey: '{query.QueryKey}'");
 
                 var vat = query.QueryParameters[ExternalSearchQueryParameter.Identifier].FirstOrDefault();
 
                 if (string.IsNullOrEmpty(vat))
                 {
                     context.Log.Verbose(() =>
-                        $"No parameter for {ExternalSearchQueryParameter.Identifier} in query, skipping execute search");
+                        $"No parameter for '{ExternalSearchQueryParameter.Identifier}' in query, skipping execute search");
                 }
                 else
                 {
@@ -192,7 +192,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                         if (response.Data != null && response.Data.Valid)
                         {
                             var diagnostic =
-                                $"External search for Id: {query.Id} QueryKey: {query.QueryKey} produced results, CompanyName: {response.Data.CompanyName}  VatNumber: {response.Data.VatNumber}";
+                                $"External search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' produced results, CompanyName: '{response.Data.CompanyName}'  VatNumber: '{response.Data.VatNumber}'";
 
                             context.Log.Info(() => diagnostic);
 
@@ -201,7 +201,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                         else
                         {
                             var diagnostic =
-                                $"Failed external search for Id: {query.Id} QueryKey: {query.QueryKey} - StatusCode: {response.StatusCode} Content: {response.Content}";
+                                $"Failed external search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' - StatusCode: '{response.StatusCode}' Content: '{response.Content}'";
 
                             context.Log.Error(() => diagnostic);
 
@@ -219,7 +219,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                              response.StatusCode == HttpStatusCode.NotFound)
                     {
                         var diagnostic =
-                            $"External search for Id: {query.Id} QueryKey: {query.QueryKey} produced no results - StatusCode: {response.StatusCode} Content: {response.Content}";
+                            $"External search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' produced no results - StatusCode: '{response.StatusCode}' Content: '{response.Content}'";
 
                         context.Log.Warn(() => diagnostic);
 
@@ -228,7 +228,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     else if (response.ErrorException != null)
                     {
                         var diagnostic =
-                            $"External search for Id: {query.Id} QueryKey: {query.QueryKey} produced no results - StatusCode: {response.StatusCode} Content: {response.Content}";
+                            $"External search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' produced no results - StatusCode: '{response.StatusCode}' Content: '{response.Content}'";
 
                         context.Log.Error(() => diagnostic, response.ErrorException);
 
@@ -237,7 +237,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     else
                     {
                         var diagnostic =
-                            $"Failed external search for Id: {query.Id} QueryKey: {query.QueryKey} - StatusCode: {response.StatusCode} Content: {response.Content}";
+                            $"Failed external search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' - StatusCode: '{response.StatusCode}' Content: '{response.Content}'";
 
                         context.Log.Error(() => diagnostic);
 
@@ -245,7 +245,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     }
 
                     context.Log.Verbose(() =>
-                        $"Finished external search for Id: {query.Id} QueryKey: {query.QueryKey}");
+                        $"Finished external search for Id: '{query.Id}' QueryKey: '{query.QueryKey}'");
                 }
             }
         }
@@ -292,7 +292,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 PopulateMetadata(clue.Data.EntityData, resultItem);
 
                 context.Log.Info(() =>
-                    $"Clue produced, Id: {clue.Id} OriginEntityCode: {clue.OriginEntityCode} RawText: {clue.RawText}");
+                    $"Clue produced, Id: '{clue.Id}' OriginEntityCode: '{clue.OriginEntityCode}' RawText: '{clue.RawText}'");
 
                 return new[] {clue};
             }
@@ -329,7 +329,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 var metadata =  CreateMetadata(result.As<VatLayerResponse>());
 
                 context.Log.Info(() =>
-                    $"Primary entity meta data created, Name: {metadata.Name} OriginEntityCode: {metadata.OriginEntityCode.Origin.Code}");
+                    $"Primary entity meta data created, Name: '{metadata.Name}' OriginEntityCode: '{metadata.OriginEntityCode.Origin.Code}'");
 
                 return metadata;
             }
