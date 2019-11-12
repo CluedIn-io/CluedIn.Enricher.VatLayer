@@ -52,7 +52,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalSearch.Providers.Va
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalSearch.VatLayer.Integration.Tests", "test\integration\ExternalSearch.VatLayer.Integration.Tests\ExternalSearch.VatLayer.Integration.Tests.csproj", "{DD79FB4E-FB22-41D7-8544-E2947EE6E99C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VATCleanerTests", "test\unit\VATCleanerTests\VATCleanerTests.csproj", "{195D0932-EA29-40BF-BBCE-26F7906504B9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalSearch.VatLayer.Unit.Tests", "test\unit\ExternalSearch.VatLayer.Unit.Tests\ExternalSearch.VatLayer.Unit.Tests.csproj", "{195D0932-EA29-40BF-BBCE-26F7906504B9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

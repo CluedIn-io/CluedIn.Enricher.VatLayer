@@ -2,6 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net452</TargetFramework>
     <IsPackable>false</IsPackable>
+    <RootNamespace>CluedIn.ExternalSearch.VatLayer.Unit.Tests</RootNamespace>
+    <AssemblyName>CluedIn.ExternalSearch.VatLayer.Unit.Tests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

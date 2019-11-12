@@ -2,13 +2,13 @@
 
 using Xunit;
 
-namespace VATCleanerTests
+namespace CluedIn.ExternalSearch.VatLayer.Unit.Tests.Utility
 {
-    public class VatUnitTests
+    public class VatNumberCleanerTests
     {
         private readonly VatNumberCleaner _sut;
 
-        public VatUnitTests()
+        public VatNumberCleanerTests()
         {
             _sut = new VatNumberCleaner();
         }
