@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text.RegularExpressions;
+
 using CluedIn.Core;
 using CluedIn.Core.Data;
 using CluedIn.Core.Data.Parts;
@@ -10,15 +10,17 @@ using CluedIn.Core.ExternalSearch;
 using CluedIn.ExternalSearch.Providers.VatLayer.Models;
 using CluedIn.ExternalSearch.Providers.VatLayer.Utility;
 using CluedIn.ExternalSearch.Providers.VatLayer.Vocabularies;
+
 using Newtonsoft.Json;
+
 using RestSharp;
 using RestSharp.Extensions.MonoHttp;
 
 namespace CluedIn.ExternalSearch.Providers.VatLayer
 {
-    /// <summary>The vatlayer graph external search provider.</summary>
+    /// <summary>The VatLayer graph external search provider.</summary>
     /// <seealso cref="ExternalSearchProviderBase" />
-    public class VatLayerExternalSearchProvider : ExternalSearchProviderBase
+    public sealed class VatLayerExternalSearchProvider : ExternalSearchProviderBase
     {
         /**********************************************************************************************************
         * CONSTRUCTORS
@@ -30,25 +32,28 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             var nameBasedTokenProvider = new NameBasedTokenProvider("VatLayer");
 
             if (nameBasedTokenProvider.ApiToken != null)
-                this.TokenProvider = new RoundRobinTokenProvider(nameBasedTokenProvider.ApiToken.Split(',', ';'));
+            {
+                TokenProvider = new RoundRobinTokenProvider(
+                    nameBasedTokenProvider.ApiToken.Split(',', ';'));
+            }
         }
 
-        public VatLayerExternalSearchProvider(IList<string> tokens)
+        public VatLayerExternalSearchProvider(IEnumerable<string> tokens)
             : this(true)
         {
-            this.TokenProvider = new RoundRobinTokenProvider(tokens);
+            TokenProvider = new RoundRobinTokenProvider(tokens);
         }
 
         public VatLayerExternalSearchProvider(IExternalSearchTokenProvider tokenProvider)
             : this(true)
         {
-            this.TokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
+            TokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
         }
 
         private VatLayerExternalSearchProvider(bool tokenProviderIsRequired)
             : this()
         {
-            this.TokenProviderIsRequired = tokenProviderIsRequired;
+            TokenProviderIsRequired = tokenProviderIsRequired;
         }
 
         /**********************************************************************************************************
@@ -61,28 +66,79 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         /// <returns>The search queries.</returns>
         public override IEnumerable<IExternalSearchQuery> BuildQueries(ExecutionContext context, IExternalSearchRequest request)
         {
-            if (string.IsNullOrEmpty(this.TokenProvider?.ApiToken))
-                throw new InvalidOperationException("ApiToken for VatLayer must be provided.");
-
-            if (!this.Accepts(request.EntityMetaData.EntityType))
-                yield break;
-
-            var existingResults = request.GetQueryResults<VatLayerResponse>(this).ToList();
-
-            Func<string, bool> vatFilter = value => existingResults.Any(r => string.Equals(r.Data.VatNumber, value, StringComparison.InvariantCultureIgnoreCase));
-
-            var entityType = request.EntityMetaData.EntityType;
-            var vatNumber  = request.QueryParameters.GetValue(Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber, new HashSet<string>());
-
-            if (vatNumber == null)
-                throw new ArgumentNullException();
-
-            foreach (var value in vatNumber.Where(v => !vatFilter(v)))
+            if (context == null)
             {
-                var cleaner = new VatNumberCleaner();
-                var sanitizedValue = cleaner.CheckVATNumber(value);
-                //yield return new ExternalSearchQuery(this, entityType, ExternalSearchQueryParameter.Identifier, value);
-                    yield return new ExternalSearchQuery(this, entityType, ExternalSearchQueryParameter.Identifier, sanitizedValue);
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            using (context.CreateLoggingScope("{0} {1}: request {2}", GetType().Name, "BuildQueries", request))
+            {
+                if (string.IsNullOrEmpty(TokenProvider?.ApiToken))
+                {
+                    throw new InvalidOperationException("ApiToken for VatLayer must be provided.");
+                }
+
+                if (!Accepts(request.EntityMetaData.EntityType))
+                {
+                    context.Log.Verbose(() =>
+                        $"Unacceptable entity type from '{request.EntityMetaData.DisplayName}', entity code '{request.EntityMetaData.EntityType.Code}'");
+
+                    yield break;
+                }
+
+                context.Log.Verbose(() =>
+                    $"Starting to build queries for {request.EntityMetaData.DisplayName}");
+
+                var existingResults = request.GetQueryResults<VatLayerResponse>(this).ToList();
+
+                Func<string, bool> vatFilter = value => existingResults.Any(r => string.Equals(r.Data.VatNumber, value, StringComparison.InvariantCultureIgnoreCase));
+
+                var entityType = request.EntityMetaData.EntityType;
+                var vatNumber = request.QueryParameters.GetValue(Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber, new HashSet<string>());
+
+                if (!vatNumber.Any())
+                {
+                    context.Log.Verbose(() =>
+                        $"No query parameter for '{Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber}' in request, skipping build queries");
+                }
+                else
+                {
+                    var filteredValues = vatNumber.Where(v => !vatFilter(v)).ToArray();
+
+                    if (!filteredValues.Any())
+                    {
+                        context.Log.Warn(() =>
+                            $"Filter removed all VAT numbers, skipping processing. Original '{string.Join(",", vatNumber)}'");
+                    }
+                    else
+                    {
+                        foreach (var value in filteredValues)
+                        {
+                            var cleaner = new VatNumberCleaner();
+                            var sanitizedValue = cleaner.CheckVATNumber(value);
+
+                            if (value != sanitizedValue)
+                            {
+                                context.Log.Verbose(() =>
+                                    $"Sanitized VAT number. Original '{value}', Updated '{sanitizedValue}'");
+                            }
+
+                            context.Log.Info(() =>
+                                $"External search query produced, ExternalSearchQueryParameter: '{ExternalSearchQueryParameter.Identifier}' EntityType: '{entityType.Code}' Value: '{sanitizedValue}'");
+
+                            yield return new ExternalSearchQuery(this, entityType, ExternalSearchQueryParameter.Identifier,
+                                sanitizedValue);
+                        }
+                    }
+
+                    context.Log.Verbose(() =>
+                        $"Finished building queries for '{request.EntityMetaData.Name}'");
+                }
             }
         }
 
@@ -92,35 +148,106 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         /// <returns>The results.</returns>
         public override IEnumerable<IExternalSearchQueryResult> ExecuteSearch(ExecutionContext context, IExternalSearchQuery query)
         {
-            var vat = query.QueryParameters[ExternalSearchQueryParameter.Identifier].FirstOrDefault();
-
-            if (string.IsNullOrEmpty(vat))
-                yield break;
-
-            vat          = HttpUtility.UrlEncode(vat);
-            var client   = new RestClient("http://www.apilayer.net/api");
-            var request  = new RestRequest($"validate?access_key={this.TokenProvider.ApiToken}&vat_number={vat}&format=1", Method.GET);
-            var response = client.ExecuteTaskAsync<VatLayerResponse>(request).Result;
-
-            if (response.StatusCode == HttpStatusCode.OK)
+            if (context == null)
             {
-                if (response.Data != null && response.Data.Valid)
-                    yield return new ExternalSearchQueryResult<VatLayerResponse>(query, response.Data);
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            if (query == null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
+            using (context.CreateLoggingScope(
+                "{0} {1}: query {2}",
+                GetType().Name, "ExecuteSearch", query))
+            {
+                if (string.IsNullOrEmpty(TokenProvider?.ApiToken))
+                {
+                    throw new InvalidOperationException("ApiToken for VatLayer must be provided.");
+                }
+
+                context.Log.Verbose(() =>
+                    $"Starting external search for Id: '{query.Id}' QueryKey: '{query.QueryKey}'");
+
+                var vat = query.QueryParameters[ExternalSearchQueryParameter.Identifier].FirstOrDefault();
+
+                if (string.IsNullOrEmpty(vat))
+                {
+                    context.Log.Verbose(() =>
+                        $"No parameter for '{ExternalSearchQueryParameter.Identifier}' in query, skipping execute search");
+                }
                 else
                 {
-                    var content = JsonConvert.DeserializeObject<dynamic>(response.Content);
-                    if (content.error != null)
+                    // TODO missing try { } catch { } block ...
+
+                    vat = HttpUtility.UrlEncode(vat);
+                    var client = new RestClient("http://www.apilayer.net/api");
+                    var request = new RestRequest($"validate?access_key={TokenProvider.ApiToken}&vat_number={vat}&format=1",
+                        Method.GET);
+                    var response = client.ExecuteTaskAsync<VatLayerResponse>(request).Result;
+
+                    if (response.StatusCode == HttpStatusCode.OK)
                     {
-                        throw new InvalidOperationException($"{content.error.info} - Type: {content.error.type} Code: {content.error.code}");
+                        if (response.Data != null && response.Data.Valid)
+                        {
+                            var diagnostic =
+                                $"External search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' produced results, CompanyName: '{response.Data.CompanyName}'  VatNumber: '{response.Data.VatNumber}'";
+
+                            context.Log.Info(() => diagnostic);
+
+                            yield return new ExternalSearchQueryResult<VatLayerResponse>(query, response.Data);
+                        }
+                        else
+                        {
+                            var diagnostic =
+                                $"Failed external search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' - StatusCode: '{response.StatusCode}' Content: '{response.Content}'";
+
+                            context.Log.Error(() => diagnostic);
+
+                            var content = JsonConvert.DeserializeObject<dynamic>(response.Content);
+                            if (content.error != null)
+                            {
+                                throw new InvalidOperationException(
+                                    $"{content.error.info} - Type: {content.error.type} Code: {content.error.code}");
+                            }
+
+                            // TODO else do what with content ? ...
+                        }
                     }
+                    else if (response.StatusCode == HttpStatusCode.NoContent ||
+                             response.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        var diagnostic =
+                            $"External search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' produced no results - StatusCode: '{response.StatusCode}' Content: '{response.Content}'";
+
+                        context.Log.Warn(() => diagnostic);
+
+                        yield break;
+                    }
+                    else if (response.ErrorException != null)
+                    {
+                        var diagnostic =
+                            $"External search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' produced no results - StatusCode: '{response.StatusCode}' Content: '{response.Content}'";
+
+                        context.Log.Error(() => diagnostic, response.ErrorException);
+
+                        throw new AggregateException(response.ErrorException.Message, response.ErrorException);
+                    }
+                    else
+                    {
+                        var diagnostic =
+                            $"Failed external search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' - StatusCode: '{response.StatusCode}' Content: '{response.Content}'";
+
+                        context.Log.Error(() => diagnostic);
+
+                        throw new ApplicationException(diagnostic);
+                    }
+
+                    context.Log.Verbose(() =>
+                        $"Finished external search for Id: '{query.Id}' QueryKey: '{query.QueryKey}'");
                 }
             }
-            else if (response.StatusCode == HttpStatusCode.NoContent || response.StatusCode == HttpStatusCode.NotFound)
-                yield break;
-            else if (response.ErrorException != null)
-                throw new AggregateException(response.ErrorException.Message, response.ErrorException);
-            else
-                throw new ApplicationException("Could not execute external search query - StatusCode:" + response.StatusCode + "; Content: " + response.Content);
         }
 
         /// <summary>Builds the clues.</summary>
@@ -129,15 +256,46 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         /// <param name="result">The result.</param>
         /// <param name="request">The request.</param>
         /// <returns>The clues.</returns>
-        public override IEnumerable<Clue> BuildClues(ExecutionContext context, IExternalSearchQuery query, IExternalSearchQueryResult result, IExternalSearchRequest request)
+        public override IEnumerable<Clue> BuildClues(ExecutionContext context,
+            IExternalSearchQuery query,
+            IExternalSearchQueryResult result,
+            IExternalSearchRequest request)
         {
-            var resultItem  = result.As<VatLayerResponse>();
-            var code        = this.GetOriginEntityCode(resultItem);
-            var clue        = new Clue(code, context.Organization);
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
 
-            this.PopulateMetadata(clue.Data.EntityData, resultItem);
+            if (query == null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
 
-            return new[] { clue };
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
+
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            using (context.CreateLoggingScope(
+                "{0} {1}: query {2}, request {3}, result {4}",
+                GetType().Name, "BuildClues", query, request, result))
+            {
+                var resultItem = result.As<VatLayerResponse>();
+                var code = GetOriginEntityCode(resultItem);
+                var clue = new Clue(code, context.Organization);
+
+                PopulateMetadata(clue.Data.EntityData, resultItem);
+
+                context.Log.Info(() =>
+                    $"Clue produced, Id: '{clue.Id}' OriginEntityCode: '{clue.OriginEntityCode}' RawText: '{clue.RawText}'");
+
+                return new[] {clue};
+            }
         }
 
         /// <summary>Gets the primary entity metadata.</summary>
@@ -145,10 +303,36 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         /// <param name="result">The result.</param>
         /// <param name="request">The request.</param>
         /// <returns>The primary entity metadata.</returns>
-        public override IEntityMetadata GetPrimaryEntityMetadata(ExecutionContext context, IExternalSearchQueryResult result, IExternalSearchRequest request)
+        public override IEntityMetadata GetPrimaryEntityMetadata(ExecutionContext context,
+            IExternalSearchQueryResult result,
+            IExternalSearchRequest request)
         {
-            var resultItem = result.As<VatLayerResponse>();
-            return this.CreateMetadata(resultItem);
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
+
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            using (context.CreateLoggingScope(
+                "{0} {1}: request {2}, result {3}",
+                GetType().Name, "GetPrimaryEntityMetadata", request, result))
+            {
+                var metadata =  CreateMetadata(result.As<VatLayerResponse>());
+
+                context.Log.Info(() =>
+                    $"Primary entity meta data created, Name: '{metadata.Name}' OriginEntityCode: '{metadata.OriginEntityCode.Origin.Code}'");
+
+                return metadata;
+            }
         }
 
         /// <summary>Gets the preview image.</summary>
@@ -158,42 +342,49 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         /// <returns>The preview image.</returns>
         public override IPreviewImage GetPrimaryEntityPreviewImage(ExecutionContext context, IExternalSearchQueryResult result, IExternalSearchRequest request)
         {
-            return null;
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
+
+            using (context.CreateLoggingScope(
+                "{0} {1}: request {2}, result {3}",
+                GetType().Name, "GetPrimaryEntityPreviewImage", request, result))
+            {
+                context.Log.Info(() =>
+                    "Primary entity preview image not produced, returning null");
+
+                return null;
+            }
         }
 
-        /// <summary>Creates the metadata.</summary>
-        /// <param name="resultItem">The result item.</param>
-        /// <returns>The metadata.</returns>
-        private IEntityMetadata CreateMetadata(IExternalSearchQueryResult<VatLayerResponse> resultItem)
+        private static IEntityMetadata CreateMetadata(IExternalSearchQueryResult<VatLayerResponse> resultItem)
         {
             var metadata = new EntityMetadataPart();
 
-            this.PopulateMetadata(metadata, resultItem);
+            PopulateMetadata(metadata, resultItem);
 
             return metadata;
         }
 
-        /// <summary>Gets the origin entity code.</summary>
-        /// <param name="resultItem">The result item.</param>
-        /// <returns>The origin entity code.</returns>
-        private EntityCode GetOriginEntityCode(IExternalSearchQueryResult<VatLayerResponse> resultItem)
+        private static EntityCode GetOriginEntityCode(IExternalSearchQueryResult<VatLayerResponse> resultItem)
         {
-            return new EntityCode(EntityType.Organization, this.GetCodeOrigin(), resultItem.Data.VatNumber);
+            return new EntityCode(EntityType.Organization, GetCodeOrigin(), resultItem.Data.VatNumber);
         }
 
-        /// <summary>Gets the code origin.</summary>
-        /// <returns>The code origin</returns>
-        private CodeOrigin GetCodeOrigin()
+        private static CodeOrigin GetCodeOrigin()
         {
             return CodeOrigin.CluedIn.CreateSpecific("vatlayer");
         }
 
-        /// <summary>Populates the metadata.</summary>
-        /// <param name="metadata">The metadata.</param>
-        /// <param name="resultItem">The result item.</param>
-        private void PopulateMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<VatLayerResponse> resultItem)
+        private static void PopulateMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<VatLayerResponse> resultItem)
         {
-            var code = this.GetOriginEntityCode(resultItem);
+            var code = GetOriginEntityCode(resultItem);
 
             metadata.EntityType         = EntityType.Organization;
             metadata.Name               = resultItem.Data.CompanyName;
@@ -206,7 +397,9 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             metadata.Properties[VatLayerVocabulary.Organization.CountryCode]    = resultItem.Data.CountryCode;
 
             if (resultItem.Data.CountryCode == "DK")
+            {
                 metadata.Properties[VatLayerVocabulary.Organization.CvrNumber]  = resultItem.Data.VatNumber;
+            }
 
             metadata.Properties[VatLayerVocabulary.Organization.FullVAT]        = resultItem.Data.Query;
             
