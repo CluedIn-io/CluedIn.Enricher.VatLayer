@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.645
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29503.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B2A52533-7FBF-41FE-A0AF-874FC54300B2}"
 	ProjectSection(SolutionItems) = preProject
@@ -52,7 +52,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalSearch.Providers.Va
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalSearch.VatLayer.Integration.Tests", "test\integration\ExternalSearch.VatLayer.Integration.Tests\ExternalSearch.VatLayer.Integration.Tests.csproj", "{DD79FB4E-FB22-41D7-8544-E2947EE6E99C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VATCleanerTests", "VATCleanerTests\VATCleanerTests.csproj", "{272F1F9E-1370-4787-B64E-7F887031D7FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalSearch.VatLayer.Unit.Tests", "test\unit\ExternalSearch.VatLayer.Unit.Tests\ExternalSearch.VatLayer.Unit.Tests.csproj", "{195D0932-EA29-40BF-BBCE-26F7906504B9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -68,10 +68,10 @@ Global
 		{DD79FB4E-FB22-41D7-8544-E2947EE6E99C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD79FB4E-FB22-41D7-8544-E2947EE6E99C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD79FB4E-FB22-41D7-8544-E2947EE6E99C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{272F1F9E-1370-4787-B64E-7F887031D7FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{272F1F9E-1370-4787-B64E-7F887031D7FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{272F1F9E-1370-4787-B64E-7F887031D7FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{272F1F9E-1370-4787-B64E-7F887031D7FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{195D0932-EA29-40BF-BBCE-26F7906504B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{195D0932-EA29-40BF-BBCE-26F7906504B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{195D0932-EA29-40BF-BBCE-26F7906504B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{195D0932-EA29-40BF-BBCE-26F7906504B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -86,7 +86,7 @@ Global
 		{17EE3C8D-BAE4-481A-B9CC-1BE878E86124} = {9BD54E81-D9C8-4419-82B8-8EE6CC7E2647}
 		{BD49FBC7-7E7B-410C-BBB4-F3B0E3293541} = {B2A52533-7FBF-41FE-A0AF-874FC54300B2}
 		{DD79FB4E-FB22-41D7-8544-E2947EE6E99C} = {DBD1964B-DBD9-4C70-96CA-391C34B3D75F}
-		{272F1F9E-1370-4787-B64E-7F887031D7FE} = {A32B6852-82C7-4107-8C68-AE9232289E09}
+		{195D0932-EA29-40BF-BBCE-26F7906504B9} = {A32B6852-82C7-4107-8C68-AE9232289E09}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6A61CB42-80C5-4A83-AC3E-DA41FC875525}

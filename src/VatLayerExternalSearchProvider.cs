@@ -20,7 +20,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 {
     /// <summary>The VatLayer graph external search provider.</summary>
     /// <seealso cref="ExternalSearchProviderBase" />
-    public sealed class VatLayerExternalSearchProvider : ExternalSearchProviderBase
+    public class VatLayerExternalSearchProvider : ExternalSearchProviderBase
     {
         /**********************************************************************************************************
         * CONSTRUCTORS
