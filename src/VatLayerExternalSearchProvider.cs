@@ -286,9 +286,12 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 GetType().Name, "BuildClues", query, request, result))
             {
                 var resultItem = result.As<VatLayerResponse>();
+                var dirtyClue = request.QueryParameters.ElementAt(0);
+                resultItem.Data.DirtyClue = dirtyClue.ToString();
                 var code = GetOriginEntityCode(resultItem);
                 var clue = new Clue(code, context.Organization);
-
+                if (!string.IsNullOrEmpty(resultItem.Data.DirtyClue))
+                    new EntityCode(EntityType.Organization, GetCodeOrigin(), resultItem.Data.DirtyClue);
                 PopulateMetadata(clue.Data.EntityData, resultItem);
 
                 context.Log.Info(() =>
@@ -374,7 +377,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
         private static EntityCode GetOriginEntityCode(IExternalSearchQueryResult<VatLayerResponse> resultItem)
         {
-            return new EntityCode(EntityType.Organization, GetCodeOrigin(), resultItem.Data.VatNumber);
+            return new EntityCode(EntityType.Organization, GetCodeOrigin(), resultItem.Data.CountryCode + resultItem.Data.VatNumber);
         }
 
         private static CodeOrigin GetCodeOrigin()
@@ -389,17 +392,13 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             metadata.EntityType         = EntityType.Organization;
             metadata.Name               = resultItem.Data.CompanyName;
             metadata.OriginEntityCode   = code;
-
             metadata.Codes.Add(code);
 
             metadata.Properties[VatLayerVocabulary.Organization.Name]           = resultItem.Data.CompanyName;
 
             metadata.Properties[VatLayerVocabulary.Organization.CountryCode]    = resultItem.Data.CountryCode;
 
-            if (resultItem.Data.CountryCode == "DK")
-            {
-                metadata.Properties[VatLayerVocabulary.Organization.CvrNumber]  = resultItem.Data.VatNumber;
-            }
+            metadata.Properties[VatLayerVocabulary.Organization.CvrNumber]      = resultItem.Data.VatNumber;
 
             metadata.Properties[VatLayerVocabulary.Organization.FullVAT]        = resultItem.Data.Query;
             
