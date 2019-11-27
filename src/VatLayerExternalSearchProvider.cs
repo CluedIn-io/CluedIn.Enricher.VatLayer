@@ -408,9 +408,9 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             metadata.Properties[VatLayerVocabulary.Organization.Address]        = resultItem.Data.CompanyAddress;
         }
 
-        public string Icon { get; } = "Resources.cluedin.png";
-        public string Domain { get; } = "To be confirmed";
-        public string About { get; } = "A test Enricher used to work with known data during acceptance tests";
+        public string Icon { get; } = "Resources.vatlayer.png";
+        public string Domain { get; } = "https://vatlayer.com/";
+        public string About { get; } = "VatLayer is enricher for validating and cleaning VAT numbers";
         public AuthMethods AuthMethods { get; } = null;
         public IEnumerable<Control> Properties { get; } = null;
         public Guide Guide { get; } = null;

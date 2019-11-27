@@ -15,10 +15,10 @@
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="Resources\cluedin.png" />
+    <None Remove="Resources\vatlayer.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\cluedin.png" />
+    <EmbeddedResource Include="Resources\vatlayer.png" />
   </ItemGroup>
     <ItemGroup>
     <PackageReference Include="CluedIn.ExternalSearch">
