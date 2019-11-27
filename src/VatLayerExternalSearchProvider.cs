@@ -6,7 +6,9 @@ using System.Net;
 using CluedIn.Core;
 using CluedIn.Core.Data;
 using CluedIn.Core.Data.Parts;
+using CluedIn.Core.Data.Relational;
 using CluedIn.Core.ExternalSearch;
+using CluedIn.Core.Providers;
 using CluedIn.ExternalSearch.Providers.VatLayer.Models;
 using CluedIn.ExternalSearch.Providers.VatLayer.Utility;
 using CluedIn.ExternalSearch.Providers.VatLayer.Vocabularies;
@@ -15,12 +17,13 @@ using Newtonsoft.Json;
 
 using RestSharp;
 using RestSharp.Extensions.MonoHttp;
+using EntityType = CluedIn.Core.Data.EntityType;
 
 namespace CluedIn.ExternalSearch.Providers.VatLayer
 {
     /// <summary>The VatLayer graph external search provider.</summary>
     /// <seealso cref="ExternalSearchProviderBase" />
-    public class VatLayerExternalSearchProvider : ExternalSearchProviderBase
+    public class VatLayerExternalSearchProvider : ExternalSearchProviderBase, IExtendedEnricherMetadata
     {
         /**********************************************************************************************************
         * CONSTRUCTORS
@@ -404,5 +407,13 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             
             metadata.Properties[VatLayerVocabulary.Organization.Address]        = resultItem.Data.CompanyAddress;
         }
+
+        public string Icon { get; } = "Resources.cluedin.png";
+        public string Domain { get; } = "To be confirmed";
+        public string About { get; } = "A test Enricher used to work with known data during acceptance tests";
+        public AuthMethods AuthMethods { get; } = null;
+        public IEnumerable<Control> Properties { get; } = null;
+        public Guide Guide { get; } = null;
+        public IntegrationType Type { get; } = IntegrationType.Cloud;
     }
 }
