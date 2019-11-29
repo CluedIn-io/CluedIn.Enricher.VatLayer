@@ -100,7 +100,6 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
                 var entityType = request.EntityMetaData.EntityType;
                 var vatNumber = request.QueryParameters.GetValue(Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber, new HashSet<string>());
-                request.CustomQueryInput = vatNumber.ElementAt(0);
                 if (!vatNumber.Any())
                 {
                     context.Log.Verbose(() =>
@@ -119,6 +118,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     {
                         foreach (var value in filteredValues)
                         {
+                            request.CustomQueryInput = vatNumber.ElementAt(0);
                             var cleaner = new VatNumberCleaner();
                             var sanitizedValue = cleaner.CheckVATNumber(value);
 
@@ -287,7 +287,6 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             {
                 var resultItem = result.As<VatLayerResponse>();
                 var dirtyClue = request.CustomQueryInput.ToString();
-                //resultItem.Data.DirtyClue = dirtyClue;
                 var code = GetOriginEntityCode(resultItem);
                 var clue = new Clue(code, context.Organization);
                 if (!string.IsNullOrEmpty(dirtyClue))
