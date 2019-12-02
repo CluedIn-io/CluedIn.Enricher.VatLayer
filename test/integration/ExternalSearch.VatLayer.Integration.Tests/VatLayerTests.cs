@@ -21,9 +21,9 @@ namespace ExternalSearch.VatLayer.Integration.Tests
 {
     public class VatLayerTests : BaseExternalSearchTest<VatLayerExternalSearchProvider>
     {
-        private string ApiToken = "118edd4591f3cf622af6e72e4eded7ea";
-        
-        [Theory(Skip="Failing CI build")]
+        private const string ApiToken = "118edd4591f3cf622af6e72e4eded7ea";
+
+        [Theory]
         [InlineData("DK36548681")]
         public void TestValidVATNumber(string vatNumber)
         {
@@ -35,7 +35,7 @@ namespace ExternalSearch.VatLayer.Integration.Tests
                 Properties = properties.Properties
             };
 
-            var list = new List<string>(new string[] { this.ApiToken });
+            var list = new List<string>(new string[] { ApiToken });
             object[] parameters = { list };
 
             //Act
@@ -46,7 +46,7 @@ namespace ExternalSearch.VatLayer.Integration.Tests
             Assert.True(this.clues.Count == 1);
         }
 
-        [Theory(Skip="Failing CI build")]
+        [Theory]
         [InlineData("asdasd")]
         public void TestInvalidVATNumber(string vatNumber)
         {
@@ -58,7 +58,7 @@ namespace ExternalSearch.VatLayer.Integration.Tests
                 Properties = properties.Properties
             };
 
-            var list = new List<string>(new string[] { this.ApiToken });
+            var list = new List<string>(new string[] { ApiToken });
             object[] parameters = { list };
 
             //Act
@@ -68,7 +68,7 @@ namespace ExternalSearch.VatLayer.Integration.Tests
             this.testContext.ProcessingHub.Verify(h => h.SendCommand(It.IsAny<ProcessClueCommand>()), Times.Never);
         }
 
-        [Theory(Skip="Failing CI build")]
+        [Theory]
         [InlineData("DK12345")]
         public void TestNonExistingVATNumber(string vatNumber)
         {
@@ -80,7 +80,7 @@ namespace ExternalSearch.VatLayer.Integration.Tests
                 Properties = properties.Properties
             };
 
-            var list = new List<string>(new string[] { this.ApiToken });
+            var list = new List<string>(new string[] { ApiToken });
             object[] parameters = { list };
 
             //Act
