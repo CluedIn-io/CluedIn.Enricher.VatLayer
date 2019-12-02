@@ -6,7 +6,9 @@ using System.Net;
 using CluedIn.Core;
 using CluedIn.Core.Data;
 using CluedIn.Core.Data.Parts;
+using CluedIn.Core.Data.Relational;
 using CluedIn.Core.ExternalSearch;
+using CluedIn.Core.Providers;
 using CluedIn.ExternalSearch.Providers.VatLayer.Models;
 using CluedIn.ExternalSearch.Providers.VatLayer.Utility;
 using CluedIn.ExternalSearch.Providers.VatLayer.Vocabularies;
@@ -15,12 +17,13 @@ using Newtonsoft.Json;
 
 using RestSharp;
 using RestSharp.Extensions.MonoHttp;
+using EntityType = CluedIn.Core.Data.EntityType;
 
 namespace CluedIn.ExternalSearch.Providers.VatLayer
 {
     /// <summary>The VatLayer graph external search provider.</summary>
     /// <seealso cref="ExternalSearchProviderBase" />
-    public class VatLayerExternalSearchProvider : ExternalSearchProviderBase
+    public class VatLayerExternalSearchProvider : ExternalSearchProviderBase, IExtendedEnricherMetadata
     {
         /**********************************************************************************************************
         * CONSTRUCTORS
@@ -100,7 +103,6 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
                 var entityType = request.EntityMetaData.EntityType;
                 var vatNumber = request.QueryParameters.GetValue(Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber, new HashSet<string>());
-
                 if (!vatNumber.Any())
                 {
                     context.Log.Verbose(() =>
@@ -119,6 +121,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     {
                         foreach (var value in filteredValues)
                         {
+                            request.CustomQueryInput = vatNumber.ElementAt(0);
                             var cleaner = new VatNumberCleaner();
                             var sanitizedValue = cleaner.CheckVATNumber(value);
 
@@ -286,9 +289,11 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 GetType().Name, "BuildClues", query, request, result))
             {
                 var resultItem = result.As<VatLayerResponse>();
+                var dirtyClue = request.CustomQueryInput.ToString();
                 var code = GetOriginEntityCode(resultItem);
                 var clue = new Clue(code, context.Organization);
-
+                if (!string.IsNullOrEmpty(dirtyClue))
+                    clue.Data.EntityData.Codes.Add(new EntityCode(EntityType.Organization, CodeOrigin.CluedIn.CreateSpecific("vatlayer"), dirtyClue));
                 PopulateMetadata(clue.Data.EntityData, resultItem);
 
                 context.Log.Info(() =>
@@ -374,7 +379,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
         private static EntityCode GetOriginEntityCode(IExternalSearchQueryResult<VatLayerResponse> resultItem)
         {
-            return new EntityCode(EntityType.Organization, GetCodeOrigin(), resultItem.Data.VatNumber);
+            return new EntityCode(EntityType.Organization, GetCodeOrigin(), resultItem.Data.CountryCode + resultItem.Data.VatNumber);
         }
 
         private static CodeOrigin GetCodeOrigin()
@@ -389,21 +394,25 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             metadata.EntityType         = EntityType.Organization;
             metadata.Name               = resultItem.Data.CompanyName;
             metadata.OriginEntityCode   = code;
-
             metadata.Codes.Add(code);
 
             metadata.Properties[VatLayerVocabulary.Organization.Name]           = resultItem.Data.CompanyName;
 
             metadata.Properties[VatLayerVocabulary.Organization.CountryCode]    = resultItem.Data.CountryCode;
 
-            if (resultItem.Data.CountryCode == "DK")
-            {
-                metadata.Properties[VatLayerVocabulary.Organization.CvrNumber]  = resultItem.Data.VatNumber;
-            }
+            metadata.Properties[VatLayerVocabulary.Organization.CvrNumber]      = resultItem.Data.VatNumber;
 
             metadata.Properties[VatLayerVocabulary.Organization.FullVAT]        = resultItem.Data.Query;
             
             metadata.Properties[VatLayerVocabulary.Organization.Address]        = resultItem.Data.CompanyAddress;
         }
+
+        public string Icon { get; } = "Resources.vatlayer.png";
+        public string Domain { get; } = "https://vatlayer.com/";
+        public string About { get; } = "VatLayer is enricher for validating and cleaning VAT numbers";
+        public AuthMethods AuthMethods { get; } = null;
+        public IEnumerable<Control> Properties { get; } = null;
+        public Guide Guide { get; } = null;
+        public IntegrationType Type { get; } = IntegrationType.Cloud;
     }
 }

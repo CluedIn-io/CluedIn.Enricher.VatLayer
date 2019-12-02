@@ -25,6 +25,8 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer.Models
 
         [JsonProperty("company_address")]
         public string CompanyAddress { get; set; }
+
+        public string DirtyClue { get; set; }
     }
 
 }
