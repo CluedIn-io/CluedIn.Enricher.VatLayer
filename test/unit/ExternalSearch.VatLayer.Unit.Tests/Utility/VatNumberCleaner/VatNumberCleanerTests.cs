@@ -1,19 +1,17 @@
-﻿using CluedIn.ExternalSearch.Providers.VatLayer.Utility;
+﻿using Xunit;
 
-using Xunit;
-
-namespace CluedIn.ExternalSearch.VatLayer.Unit.Tests.Utility
+namespace CluedIn.ExternalSearch.VatLayer.Unit.Tests.Utility.VatNumberCleaner
 {
-    public class VatNumberCleanerTests
+    public class VatNumberCleanerTests : TestBase
     {
-        private readonly VatNumberCleaner _sut;
+        private readonly Providers.VatLayer.Utility.VatNumberCleaner _sut;
 
         public VatNumberCleanerTests()
         {
-            _sut = new VatNumberCleaner();
+            _sut = new Providers.VatLayer.Utility.VatNumberCleaner();
         }
 
-        [Theory(Skip = "Test is Failing")]
+        [Theory]
         [InlineData("BE -/0888533955", "BE0888533955")]
         public void TestCheckVatNumber(string vatNumber, string expected)
         {
@@ -242,7 +240,7 @@ namespace CluedIn.ExternalSearch.VatLayer.Unit.Tests.Utility
         // If you want to test for the whole VatNumber format(including country code) you call the CheckVATNumber function - returns string
         // If you want to test for only the digit part of VatNumber, you can each individual country check digit function - returns bool
 
-        [Theory(Skip = "Test is Failing")]
+        [Theory]
         [InlineData("CHE-108.315.241", "CHE108315241")]
         public void TestChePattern(string vatNumber, string expected)
         {
@@ -256,7 +254,7 @@ namespace CluedIn.ExternalSearch.VatLayer.Unit.Tests.Utility
             Assert.Equal(expected, _sut.CheckVATNumber(vatNumber));
         }
 
-        [Theory(Skip = "Test is Failing")]
+        [Theory]
         [InlineData("NL802353794B01", "NL802353794B01")]
         public void TestNlCheckDigit2(string vatNumber, string expected)
         {
