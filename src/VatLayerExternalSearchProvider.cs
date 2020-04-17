@@ -83,7 +83,8 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             {
                 if (string.IsNullOrEmpty(TokenProvider?.ApiToken))
                 {
-                    throw new InvalidOperationException("ApiToken for VatLayer must be provided.");
+                    context.Log.Error(() => "ApiToken for VatLayer must be provided.");
+                    yield break;
                 }
 
                 if (!Accepts(request.EntityMetaData.EntityType))
