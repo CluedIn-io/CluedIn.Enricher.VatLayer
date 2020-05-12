@@ -3,9 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.29503.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B2A52533-7FBF-41FE-A0AF-874FC54300B2}"
-	ProjectSection(SolutionItems) = preProject
-		src\Directory.Build.props = src\Directory.Build.props
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{7E2E897B-E664-4ECC-8AD8-814AAEAD8639}"
 	ProjectSection(SolutionItems) = preProject
@@ -35,6 +32,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{02641789-0D38-4DBB-9288-23592CF55D25}"
 	ProjectSection(SolutionItems) = preProject
 		NuGet.config = NuGet.config
+		Packages.props = Packages.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Code Style", "Code Style", "{2C3AECCF-DCB5-4ED7-8B7B-8F373EDE3A5E}"

@@ -269,3 +269,4 @@ NDependOut/
 
 # Test Code Coverage
 coverage.json
+.DS_Store
