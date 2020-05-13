@@ -177,7 +177,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     var client = new RestClient("http://www.apilayer.net/api");
                     var request = new RestRequest($"validate?access_key={TokenProvider.ApiToken}&vat_number={vat}&format=1",
                         Method.GET);
-                    var response = client.ExecuteTaskAsync<VatLayerResponse>(request).Result;
+                    var response = client.ExecuteAsync<VatLayerResponse>(request).Result;
 
                     if (response.StatusCode == HttpStatusCode.OK)
                     {
