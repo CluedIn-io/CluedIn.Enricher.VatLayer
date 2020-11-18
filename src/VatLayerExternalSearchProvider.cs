@@ -388,7 +388,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
         public string Icon { get; } = "Resources.vatlayer.png";
         public string Domain { get; } = "https://vatlayer.com/";
-        public string About { get; } = "VatLayer is enricher for validating and cleaning VAT numbers";
+        public string About { get; } = "VatLayer is an enricher for validating and cleaning VAT numbers";
         public AuthMethods AuthMethods { get; } = null;
         public IEnumerable<Control> Properties { get; } = null;
         public Guide Guide { get; } = null;
