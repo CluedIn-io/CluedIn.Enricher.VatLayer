@@ -52,6 +52,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalSearch.VatLayer.Uni
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalSearch.Providers.VatLayer", "src\ExternalSearch.Providers.VatLayer\ExternalSearch.Providers.VatLayer.csproj", "{9FD65D12-0D5B-46B7-AE96-1502E4A45E30}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalSearch.Providers.VatLayer.Provider", "src\ExternalSearch.Providers.VatLayer.Provider\ExternalSearch.Providers.VatLayer.Provider.csproj", "{D2B36432-79F7-41AD-90A8-CF34F2E07A33}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,6 +72,10 @@ Global
 		{9FD65D12-0D5B-46B7-AE96-1502E4A45E30}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9FD65D12-0D5B-46B7-AE96-1502E4A45E30}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9FD65D12-0D5B-46B7-AE96-1502E4A45E30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2B36432-79F7-41AD-90A8-CF34F2E07A33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2B36432-79F7-41AD-90A8-CF34F2E07A33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2B36432-79F7-41AD-90A8-CF34F2E07A33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2B36432-79F7-41AD-90A8-CF34F2E07A33}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -85,6 +91,7 @@ Global
 		{DD79FB4E-FB22-41D7-8544-E2947EE6E99C} = {DBD1964B-DBD9-4C70-96CA-391C34B3D75F}
 		{195D0932-EA29-40BF-BBCE-26F7906504B9} = {A32B6852-82C7-4107-8C68-AE9232289E09}
 		{9FD65D12-0D5B-46B7-AE96-1502E4A45E30} = {B2A52533-7FBF-41FE-A0AF-874FC54300B2}
+		{D2B36432-79F7-41AD-90A8-CF34F2E07A33} = {B2A52533-7FBF-41FE-A0AF-874FC54300B2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6A61CB42-80C5-4A83-AC3E-DA41FC875525}
