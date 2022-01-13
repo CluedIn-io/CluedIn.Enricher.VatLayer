@@ -25,7 +25,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         {
             token = new List<Control>()
             {
-                new()
+                new Control()
                 {
                     displayName = "Api Key",
                     type = "input",
