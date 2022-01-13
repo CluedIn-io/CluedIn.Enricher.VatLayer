@@ -52,7 +52,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalSearch.VatLayer.Uni
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalSearch.Providers.VatLayer", "src\ExternalSearch.Providers.VatLayer\ExternalSearch.Providers.VatLayer.csproj", "{9FD65D12-0D5B-46B7-AE96-1502E4A45E30}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExternalSearch.Providers.VatLayer.Provider", "src\ExternalSearch.Providers.VatLayer.Provider\ExternalSearch.Providers.VatLayer.Provider.csproj", "{D2B36432-79F7-41AD-90A8-CF34F2E07A33}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Provider.ExternalSearch.Providers.VatLayer", "src\ExternalSearch.Providers.VatLayer.Provider\Provider.ExternalSearch.Providers.VatLayer.csproj", "{D2B36432-79F7-41AD-90A8-CF34F2E07A33}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
