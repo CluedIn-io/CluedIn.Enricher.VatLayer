@@ -1,10 +1,6 @@
-mode: ContinuousDeployment
-next-version: 3.2
-branches:
-  master:
-    mode: ContinuousDelivery
-  pull-request:
-    tag: pr
-    increment: None
-  develop:
-    tag: alpha1
+# GitVersion.yml
+mode: ContinuousDelivery
+next-version: 3.3
+branches: {}
+ignore:
+  sha: []
