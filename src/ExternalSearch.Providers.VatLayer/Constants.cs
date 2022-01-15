@@ -30,7 +30,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     displayName = "Api Key",
                     type = "input",
                     isRequired = true,
-                    name = "apiKey"
+                    name = KeyName.ApiToken
                 }
             }
         };
