@@ -5,6 +5,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\vatlayer.png" />
   </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="CluedIn.Core" />
     <PackageReference Include="CluedIn.ExternalSearch" />
