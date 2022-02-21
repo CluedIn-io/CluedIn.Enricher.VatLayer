@@ -3,6 +3,6 @@
     <PackageReference Include="CluedIn.Testing.Base" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\ExternalSearch.Providers.VatLayer.csproj" />
+    <ProjectReference Include="..\..\..\src\ExternalSearch.Providers.VatLayer\ExternalSearch.Providers.VatLayer.csproj" />
   </ItemGroup>
 </Project>

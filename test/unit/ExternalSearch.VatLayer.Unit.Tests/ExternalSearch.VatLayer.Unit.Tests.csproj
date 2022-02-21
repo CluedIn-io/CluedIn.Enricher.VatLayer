@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\ExternalSearch.Providers.VatLayer.csproj" />
+    <PackageReference Include="CluedIn.Core" />
   </ItemGroup>
-
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\ExternalSearch.Providers.VatLayer\ExternalSearch.Providers.VatLayer.csproj" />
+  </ItemGroup>
 </Project>
