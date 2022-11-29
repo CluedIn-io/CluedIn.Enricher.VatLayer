@@ -26,7 +26,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
     /// <seealso cref="ExternalSearchProviderBase" />
     public class VatLayerExternalSearchProvider : ExternalSearchProviderBase, IExtendedEnricherMetadata, IConfigurableExternalSearchProvider
     {
-        private static readonly EntityType[] AcceptedEntityTypes = { EntityType.Organization };
+        private static EntityType[] AcceptedEntityTypes = { };
         /**********************************************************************************************************
         * CONSTRUCTORS
         **********************************************************************************************************/
@@ -79,7 +79,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             }
         }
 
-        private IEnumerable<IExternalSearchQuery> InternalBuildQueries(ExecutionContext context, IExternalSearchRequest request, string apiToken)
+        private IEnumerable<IExternalSearchQuery> InternalBuildQueries(ExecutionContext context, IExternalSearchRequest request, string apiToken, IDictionary<string, object> config = null)
         {
             if (context == null)
             {
@@ -113,7 +113,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 bool vatFilter(string value) => existingResults.Any(r => string.Equals(r.Data.VatNumber, value, StringComparison.InvariantCultureIgnoreCase));
 
                 var entityType = request.EntityMetaData.EntityType;
-                var vatNumber = request.QueryParameters.GetValue(Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber, new HashSet<string>());
+                var vatNumber = request.QueryParameters.GetValue<string, HashSet<string>>(config[Constants.KeyName.AcceptedVocabKeys].ToString(), new HashSet<string>());
                 if (!vatNumber.Any())
                 {
                     context.Log.LogTrace("No query parameter for '{VatNumber}' in request, skipping build queries", Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber);
@@ -410,6 +410,8 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
         public IEnumerable<EntityType> Accepts(IDictionary<string, object> config, IProvider provider)
         {
+            AcceptedEntityTypes = new EntityType[] { config[Constants.KeyName.AcceptedEntityTypes].ToString() };
+
             return AcceptedEntityTypes;
         }
 
@@ -417,7 +419,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         {
             var jobData = new VatLayerExternalSearchJobData(config);
 
-            foreach (var externalSearchQuery in InternalBuildQueries(context, request, jobData.ApiToken))
+            foreach (var externalSearchQuery in InternalBuildQueries(context, request, jobData.ApiToken, config))
             {
                 yield return externalSearchQuery;
             }
