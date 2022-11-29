@@ -8,21 +8,21 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         public VatLayerExternalSearchJobData(IDictionary<string, object> configuration)
         {
             ApiToken = GetValue<string>(configuration, Constants.KeyName.ApiToken);
-            AcceptedEntityTypes = GetValue<string>(configuration, Constants.KeyName.AcceptedEntityTypes);
-            ApiToken = GetValue<string>(configuration, Constants.KeyName.ApiToken);
+            AcceptedEntityType = GetValue<string>(configuration, Constants.KeyName.AcceptedEntityType);
+            AcceptedVocabKey = GetValue<string>(configuration, Constants.KeyName.AcceptedVocabKey);
         }
 
         public IDictionary<string, object> ToDictionary()
         {
             return new Dictionary<string, object> {
                 { Constants.KeyName.ApiToken, ApiToken },
-                { Constants.KeyName.AcceptedEntityTypes, AcceptedEntityTypes },
-                { Constants.KeyName.AcceptedVocabKeys, AcceptedVocabKeys }
+                { Constants.KeyName.AcceptedEntityType, AcceptedEntityType },
+                { Constants.KeyName.AcceptedVocabKey, AcceptedVocabKey }
             };
         }
 
         public string ApiToken { get; set; }
-        public string AcceptedEntityTypes { get; set; }
-        public string AcceptedVocabKeys { get; set; }
+        public string AcceptedEntityType { get; set; }
+        public string AcceptedVocabKey { get; set; }
     }
 }

@@ -14,8 +14,8 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         public struct KeyName
         {
             public const string ApiToken = "apiToken";
-            public const string AcceptedEntityTypes = "acceptedEntityTypes";
-            public const string AcceptedVocabKeys = "acceptedVocabKeys";
+            public const string AcceptedEntityType = "acceptedEntityType";
+            public const string AcceptedVocabKey = "acceptedVocabKey";
 
         }
 
@@ -36,17 +36,17 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 },
                 new Control()
                 {
-                    displayName = "Accepted Entity Types",
+                    displayName = "Accepted Entity Type",
                     type = "input",
                     isRequired = true,
-                    name = KeyName.AcceptedEntityTypes
+                    name = KeyName.AcceptedEntityType
                 },
                 new Control()
                 {
-                    displayName = "Accepted Vocab Keys",
+                    displayName = "Accepted Vocab Key",
                     type = "input",
                     isRequired = true,
-                    name = KeyName.AcceptedVocabKeys
+                    name = KeyName.AcceptedVocabKey
                 },
             }
         };
