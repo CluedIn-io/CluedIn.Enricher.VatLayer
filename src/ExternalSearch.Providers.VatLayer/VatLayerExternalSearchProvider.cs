@@ -122,15 +122,14 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
                 var entityType = request.EntityMetaData.EntityType;
 
-                var customVocabKey = config[Constants.KeyName.AcceptedVocabKey].ToString();
                 var vatNumber = new HashSet<string>();
-                if (string.IsNullOrWhiteSpace(customVocabKey))
+                if (config.TryGetValue(Constants.KeyName.AcceptedVocabKey, out var customVocabKey) && !string.IsNullOrWhiteSpace(customVocabKey.ToString()))
                 {
-                    vatNumber = request.QueryParameters.GetValue(Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber, new HashSet<string>());
+                    vatNumber = request.QueryParameters.GetValue<string, HashSet<string>>(config[Constants.KeyName.AcceptedVocabKey].ToString(), new HashSet<string>());
                 }
                 else
                 {
-                    vatNumber = request.QueryParameters.GetValue<string, HashSet<string>>(config[Constants.KeyName.AcceptedVocabKey].ToString(), new HashSet<string>());
+                    vatNumber = request.QueryParameters.GetValue(Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber, new HashSet<string>());
                 }
 
                 if (!vatNumber.Any())
