@@ -98,8 +98,16 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     context.Log.LogError("ApiToken for VatLayer must be provided.");
                     yield break;
                 }
+                if (config.TryGetValue(Constants.KeyName.AcceptedEntityType, out var customType) && !string.IsNullOrWhiteSpace(customType.ToString()))
+                {
+                    if (!request.EntityMetaData.EntityType.Is(customType.ToString()))
+                    {
+                        context.Log.LogTrace("Unacceptable entity type from '{EntityName}', entity code '{EntityCode}'", request.EntityMetaData.DisplayName, request.EntityMetaData.EntityType.Code);
 
-                if (!Accepts(request.EntityMetaData.EntityType))
+                        yield break;
+                    }
+                }
+                else if (!Accepts(request.EntityMetaData.EntityType))
                 {
                     context.Log.LogTrace("Unacceptable entity type from '{EntityName}', entity code '{EntityCode}'", request.EntityMetaData.DisplayName, request.EntityMetaData.EntityType.Code);
 
@@ -421,10 +429,9 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
         public IEnumerable<EntityType> Accepts(IDictionary<string, object> config, IProvider provider)
         {
-            var customTypes = config[Constants.KeyName.AcceptedEntityType].ToString();
-            if (string.IsNullOrWhiteSpace(customTypes))
+            if (config.TryGetValue(Constants.KeyName.AcceptedEntityType, out var customTypes))
             {
-                AcceptedEntityTypes = new EntityType[] { config[Constants.KeyName.AcceptedEntityType].ToString() };
+                AcceptedEntityTypes = new EntityType[] { customTypes.ToString() };
             };
 
             return AcceptedEntityTypes;
