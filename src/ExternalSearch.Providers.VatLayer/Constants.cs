@@ -38,14 +38,14 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 {
                     displayName = "Accepted Entity Type",
                     type = "input",
-                    isRequired = true,
+                    isRequired = false,
                     name = KeyName.AcceptedEntityType
                 },
                 new Control()
                 {
                     displayName = "Accepted Vocab Key",
                     type = "input",
-                    isRequired = true,
+                    isRequired = false,
                     name = KeyName.AcceptedVocabKey
                 },
             }
