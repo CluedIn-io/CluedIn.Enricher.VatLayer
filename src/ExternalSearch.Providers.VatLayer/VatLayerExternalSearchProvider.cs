@@ -316,11 +316,11 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             {
                 var resultItem = result.As<VatLayerResponse>();
                 var dirtyClue = request.CustomQueryInput.ToString();
-                var code = GetOriginEntityCode(resultItem);
+                var code = GetOriginEntityCode(resultItem, request);
                 var clue = new Clue(code, context.Organization);
                 if (!string.IsNullOrEmpty(dirtyClue))
                     clue.Data.EntityData.Codes.Add(new EntityCode(EntityType.Organization, CodeOrigin.CluedIn.CreateSpecific("vatlayer"), dirtyClue));
-                PopulateMetadata(clue.Data.EntityData, resultItem);
+                PopulateMetadata(clue.Data.EntityData, resultItem, request);
 
                 context.Log.LogInformation("Clue produced, Id: '{Id}' OriginEntityCode: '{OriginEntityCode}' RawText: '{RawText}'", clue.Id, clue.OriginEntityCode, clue.RawText);
 
@@ -354,7 +354,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
             using (context.Log.BeginScope("{0} {1}: request {2}, result {3}", GetType().Name, "GetPrimaryEntityMetadata", request, result))
             {
-                var metadata = CreateMetadata(result.As<VatLayerResponse>());
+                var metadata = CreateMetadata(result.As<VatLayerResponse>(), request);
 
                 context.Log.LogInformation("Primary entity meta data created, Name: '{Name}' OriginEntityCode: '{OriginEntityCode}'", metadata.Name, metadata.OriginEntityCode.Origin.Code);
 
@@ -387,31 +387,31 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             }
         }
 
-        private static IEntityMetadata CreateMetadata(IExternalSearchQueryResult<VatLayerResponse> resultItem)
+        private IEntityMetadata CreateMetadata(IExternalSearchQueryResult<VatLayerResponse> resultItem, IExternalSearchRequest request)
         {
             var metadata = new EntityMetadataPart();
 
-            PopulateMetadata(metadata, resultItem);
+            PopulateMetadata(metadata, resultItem, request);
 
             return metadata;
         }
 
-        private static EntityCode GetOriginEntityCode(IExternalSearchQueryResult<VatLayerResponse> resultItem)
+        private EntityCode GetOriginEntityCode(IExternalSearchQueryResult<VatLayerResponse> resultItem, IExternalSearchRequest request)
         {
-            return new EntityCode(EntityType.Organization, GetCodeOrigin(), resultItem.Data.CountryCode + resultItem.Data.VatNumber);
+            return new EntityCode(request.EntityMetaData.EntityType, this.GetCodeOrigin(), request.EntityMetaData.OriginEntityCode.Value);
         }
 
-        private static CodeOrigin GetCodeOrigin()
+        private CodeOrigin GetCodeOrigin()
         {
             return CodeOrigin.CluedIn.CreateSpecific("vatlayer");
         }
 
-        private static void PopulateMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<VatLayerResponse> resultItem)
+        private void PopulateMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<VatLayerResponse> resultItem, IExternalSearchRequest request)
         {
-            var code = GetOriginEntityCode(resultItem);
+            var code = GetOriginEntityCode(resultItem, request);
 
-            metadata.EntityType = EntityType.Organization;
-            metadata.Name = resultItem.Data.CompanyName;
+            metadata.EntityType = request.EntityMetaData.EntityType;
+            metadata.Name = request.EntityMetaData.Name;
             metadata.OriginEntityCode = code;
             metadata.Codes.Add(code);
 
