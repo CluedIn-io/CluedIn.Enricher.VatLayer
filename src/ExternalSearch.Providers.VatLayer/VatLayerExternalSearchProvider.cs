@@ -98,7 +98,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     context.Log.LogError("ApiToken for VatLayer must be provided.");
                     yield break;
                 }
-                if (config.TryGetValue(Constants.KeyName.AcceptedEntityType, out var customType) && !string.IsNullOrWhiteSpace(customType.ToString()))
+                if (config.TryGetValue(Constants.KeyName.AcceptedEntityType, out var customType) && !string.IsNullOrWhiteSpace(customType?.ToString()))
                 {
                     if (!request.EntityMetaData.EntityType.Is(customType.ToString()))
                     {
@@ -123,7 +123,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 var entityType = request.EntityMetaData.EntityType;
 
                 var vatNumber = new HashSet<string>();
-                if (config.TryGetValue(Constants.KeyName.AcceptedVocabKey, out var customVocabKey) && !string.IsNullOrWhiteSpace(customVocabKey.ToString()))
+                if (config.TryGetValue(Constants.KeyName.AcceptedVocabKey, out var customVocabKey) && !string.IsNullOrWhiteSpace(customVocabKey?.ToString()))
                 {
                     vatNumber = request.QueryParameters.GetValue<string, HashSet<string>>(config[Constants.KeyName.AcceptedVocabKey].ToString(), new HashSet<string>());
                 }
