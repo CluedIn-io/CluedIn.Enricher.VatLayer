@@ -318,8 +318,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 var dirtyClue = request.CustomQueryInput.ToString();
                 var code = GetOriginEntityCode(resultItem, request);
                 var clue = new Clue(code, context.Organization);
-                if (!string.IsNullOrEmpty(dirtyClue))
-                    clue.Data.EntityData.Codes.Add(new EntityCode(EntityType.Organization, CodeOrigin.CluedIn.CreateSpecific("vatlayer"), dirtyClue));
+
                 PopulateMetadata(clue.Data.EntityData, resultItem, request);
 
                 context.Log.LogInformation("Clue produced, Id: '{Id}' OriginEntityCode: '{OriginEntityCode}' RawText: '{RawText}'", clue.Id, clue.OriginEntityCode, clue.RawText);
@@ -413,7 +412,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             metadata.EntityType = request.EntityMetaData.EntityType;
             metadata.Name = request.EntityMetaData.Name;
             metadata.OriginEntityCode = code;
-            metadata.Codes.Add(code);
+            metadata.Codes.Add(request.EntityMetaData.OriginEntityCode);
 
             metadata.Properties[VatLayerVocabulary.Organization.Name] = resultItem.Data.CompanyName;
 
