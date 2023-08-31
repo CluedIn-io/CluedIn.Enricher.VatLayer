@@ -43,13 +43,13 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             }
         }
 
-        public VatLayerExternalSearchProvider(IEnumerable<string> tokens)
+        private VatLayerExternalSearchProvider(IEnumerable<string> tokens)
             : this(true)
         {
             TokenProvider = new RoundRobinTokenProvider(tokens);
         }
 
-        public VatLayerExternalSearchProvider(IExternalSearchTokenProvider tokenProvider)
+        private VatLayerExternalSearchProvider(IExternalSearchTokenProvider tokenProvider)
             : this(true)
         {
             TokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
@@ -457,6 +457,6 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         public Guide Guide { get; } = Constants.Guide;
         public IntegrationType Type { get; } = Constants.IntegrationType;
 
-        
+
     }
 }
