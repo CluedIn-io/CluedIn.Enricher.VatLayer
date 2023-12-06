@@ -34,11 +34,6 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer.Vocabularies
                 this.FullVAT                            = group.Add(new VocabularyKey("fullVat"));
                 this.Address                            = group.Add(new VocabularyKey("address"));
 
-                this.AddMapping(this.Name,          Core.Data.Vocabularies.Vocabularies.CluedInOrganization.OrganizationName);
-                this.AddMapping(this.CountryCode,   Core.Data.Vocabularies.Vocabularies.CluedInOrganization.AddressCountryCode);
-                this.AddMapping(this.CvrNumber,     Core.Data.Vocabularies.Vocabularies.CluedInOrganization.CodesCVR);
-                this.AddMapping(this.FullVAT,       Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber);
-                this.AddMapping(this.Address,       Core.Data.Vocabularies.Vocabularies.CluedInOrganization.Address);
 
             });
 
