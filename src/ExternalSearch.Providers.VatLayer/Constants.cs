@@ -20,7 +20,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         }
 
         public static string About { get; set; } = "VatLayer is an enricher for validating and cleaning VAT numbers";
-        public static string Icon { get; set; } = "Resources.vatlayer.png";
+        public static string Icon { get; set; } = "Resources.logo.svg";
         public static string Domain { get; set; } = "https://vatlayer.com/";
 
         public static AuthMethods AuthMethods { get; set; } = new AuthMethods

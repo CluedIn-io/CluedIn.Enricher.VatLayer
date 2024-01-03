@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <None Remove="Resources\vatlayer.png" />
+    <None Remove="Resources\logo.svg" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\vatlayer.png" />
+    <EmbeddedResource Include="Resources\logo.svg" />
   </ItemGroup>
 
   <ItemGroup>
