@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg version="1.1" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+ <defs>
+  <filter id="filter5587" x="-.030375" y="-.064307" width="1.0607" height="1.1627" color-interpolation-filters="sRGB">
+   <feFlood flood-color="rgb(0,0,0)" flood-opacity=".49804" result="flood"/>
+   <feComposite in="flood" in2="SourceGraphic" operator="in" result="composite1"/>
+   <feGaussianBlur in="composite1" result="blur" stdDeviation="0.1"/>
+   <feOffset dx="-1.94289e-16" dy="0.5" result="offset"/>
+   <feComposite in="offset" in2="SourceGraphic" operator="out" result="composite2"/>
+  </filter>
+  <filter id="filter11643" x="-.031225" y="-.075051" width="1.0624" height="1.1501" color-interpolation-filters="sRGB">
+   <feFlood flood-color="rgb(0,0,0)" result="flood"/>
+   <feComposite in="flood" in2="SourceGraphic" operator="in" result="composite1"/>
+   <feGaussianBlur in="composite1" result="blur" stdDeviation="0.3"/>
+   <feOffset dx="-1.94289e-16" dy="4.57967e-15" result="offset"/>
+   <feComposite in="SourceGraphic" in2="offset" result="composite2"/>
+  </filter>
+ </defs>
+ <g transform="translate(-62.492 -82.016)">
+  <rect x="62.648" y="82.172" width="39.688" height="39.688" ry="3.2488" fill="#7e8289" stroke="#7e8289" stroke-width=".26458"/>
+  <rect x="62.648" y="83.26" width="39.688" height="38.6" ry="3.1598" fill="#595e67"/>
+  <rect x="67.041" y="95.06" width="31.078" height="14.68" ry="1.3548" fill="none" stroke="#fff" stroke-linejoin="round" stroke-width="1.408"/>
+  <rect x="67.041" y="95.06" width="31.078" height="14.68" ry="1.3548" fill="none" filter="url(#filter5587)" stroke="#fff" stroke-linejoin="round" stroke-width="1.408"/>
+  <g transform="translate(-.00025008)" fill="#fff" stroke-width=".36834">
+   <path d="m78.567 97.773-2.7917 9.5934h-2.2107l-2.7917-9.5934h2.0719l1.8508 6.7392 1.8508-6.7392z"/>
+   <path d="m86.742 107.37h-2.0411l-0.52955-1.9393h-2.838l-0.52955 1.9393h-1.9897l2.8277-9.5934h2.2724zm-3.0488-3.6982-0.94085-3.4405-0.94085 3.4405z"/>
+   <path d="m93.832 99.628h-2.3907v7.7379h-1.9742v-7.7379h-2.3907v-1.8555h6.7556z"/>
+  </g>
+  <g transform="translate(-.00025008)" fill="#fff" filter="url(#filter11643)" stroke-width=".36834">
+   <path d="m78.567 97.773-2.7917 9.5934h-2.2107l-2.7917-9.5934h2.0719l1.8508 6.7392 1.8508-6.7392z"/>
+   <path d="m86.742 107.37h-2.0411l-0.52955-1.9393h-2.838l-0.52955 1.9393h-1.9897l2.8277-9.5934h2.2724zm-3.0488-3.6982-0.94085-3.4405-0.94085 3.4405z"/>
+   <path d="m93.832 99.628h-2.3907v7.7379h-1.9742v-7.7379h-2.3907v-1.8555h6.7556z"/>
+  </g>
+ </g>
+</svg>
