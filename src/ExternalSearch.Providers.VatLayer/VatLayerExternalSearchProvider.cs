@@ -26,7 +26,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
     /// <seealso cref="ExternalSearchProviderBase" />
     public class VatLayerExternalSearchProvider : ExternalSearchProviderBase, IExtendedEnricherMetadata, IConfigurableExternalSearchProvider
     {
-        private static readonly EntityType[] AcceptedEntityTypes = { EntityType.Organization };
+        private static EntityType[] AcceptedEntityTypes = { EntityType.Organization };
         /**********************************************************************************************************
         * CONSTRUCTORS
         **********************************************************************************************************/
@@ -79,7 +79,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             }
         }
 
-        private IEnumerable<IExternalSearchQuery> InternalBuildQueries(ExecutionContext context, IExternalSearchRequest request, string apiToken)
+        private IEnumerable<IExternalSearchQuery> InternalBuildQueries(ExecutionContext context, IExternalSearchRequest request, string apiToken, IDictionary<string, object> config = null)
         {
             if (context == null)
             {
@@ -98,8 +98,16 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     context.Log.LogError("ApiToken for VatLayer must be provided.");
                     yield break;
                 }
+                if (config.TryGetValue(Constants.KeyName.AcceptedEntityType, out var customType) && !string.IsNullOrWhiteSpace(customType?.ToString()))
+                {
+                    if (!request.EntityMetaData.EntityType.Is(customType.ToString()))
+                    {
+                        context.Log.LogTrace("Unacceptable entity type from '{EntityName}', entity code '{EntityCode}'", request.EntityMetaData.DisplayName, request.EntityMetaData.EntityType.Code);
 
-                if (!Accepts(request.EntityMetaData.EntityType))
+                        yield break;
+                    }
+                }
+                else if (!Accepts(request.EntityMetaData.EntityType))
                 {
                     context.Log.LogTrace("Unacceptable entity type from '{EntityName}', entity code '{EntityCode}'", request.EntityMetaData.DisplayName, request.EntityMetaData.EntityType.Code);
 
@@ -113,7 +121,17 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 bool vatFilter(string value) => existingResults.Any(r => string.Equals(r.Data.VatNumber, value, StringComparison.InvariantCultureIgnoreCase));
 
                 var entityType = request.EntityMetaData.EntityType;
-                var vatNumber = request.QueryParameters.GetValue(Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber, new HashSet<string>());
+
+                var vatNumber = new HashSet<string>();
+                if (config.TryGetValue(Constants.KeyName.AcceptedVocabKey, out var customVocabKey) && !string.IsNullOrWhiteSpace(customVocabKey?.ToString()))
+                {
+                    vatNumber = request.QueryParameters.GetValue<string, HashSet<string>>(config[Constants.KeyName.AcceptedVocabKey].ToString(), new HashSet<string>());
+                }
+                else
+                {
+                    vatNumber = request.QueryParameters.GetValue(Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber, new HashSet<string>());
+                }
+
                 if (!vatNumber.Any())
                 {
                     context.Log.LogTrace("No query parameter for '{VatNumber}' in request, skipping build queries", Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber);
@@ -298,11 +316,10 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             {
                 var resultItem = result.As<VatLayerResponse>();
                 var dirtyClue = request.CustomQueryInput.ToString();
-                var code = GetOriginEntityCode(resultItem);
+                var code = GetOriginEntityCode(resultItem, request);
                 var clue = new Clue(code, context.Organization);
-                if (!string.IsNullOrEmpty(dirtyClue))
-                    clue.Data.EntityData.Codes.Add(new EntityCode(EntityType.Organization, CodeOrigin.CluedIn.CreateSpecific("vatlayer"), dirtyClue));
-                PopulateMetadata(clue.Data.EntityData, resultItem);
+
+                PopulateMetadata(clue.Data.EntityData, resultItem, request);
 
                 context.Log.LogInformation("Clue produced, Id: '{Id}' OriginEntityCode: '{OriginEntityCode}' RawText: '{RawText}'", clue.Id, clue.OriginEntityCode, clue.RawText);
 
@@ -336,7 +353,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
             using (context.Log.BeginScope("{0} {1}: request {2}, result {3}", GetType().Name, "GetPrimaryEntityMetadata", request, result))
             {
-                var metadata = CreateMetadata(result.As<VatLayerResponse>());
+                var metadata = CreateMetadata(result.As<VatLayerResponse>(), request);
 
                 context.Log.LogInformation("Primary entity meta data created, Name: '{Name}' OriginEntityCode: '{OriginEntityCode}'", metadata.Name, metadata.OriginEntityCode.Origin.Code);
 
@@ -369,33 +386,33 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             }
         }
 
-        private static IEntityMetadata CreateMetadata(IExternalSearchQueryResult<VatLayerResponse> resultItem)
+        private IEntityMetadata CreateMetadata(IExternalSearchQueryResult<VatLayerResponse> resultItem, IExternalSearchRequest request)
         {
             var metadata = new EntityMetadataPart();
 
-            PopulateMetadata(metadata, resultItem);
+            PopulateMetadata(metadata, resultItem, request);
 
             return metadata;
         }
 
-        private static EntityCode GetOriginEntityCode(IExternalSearchQueryResult<VatLayerResponse> resultItem)
+        private EntityCode GetOriginEntityCode(IExternalSearchQueryResult<VatLayerResponse> resultItem, IExternalSearchRequest request)
         {
-            return new EntityCode(EntityType.Organization, GetCodeOrigin(), resultItem.Data.CountryCode + resultItem.Data.VatNumber);
+            return new EntityCode(request.EntityMetaData.EntityType, this.GetCodeOrigin(), request.EntityMetaData.OriginEntityCode.Value);
         }
 
-        private static CodeOrigin GetCodeOrigin()
+        private CodeOrigin GetCodeOrigin()
         {
             return CodeOrigin.CluedIn.CreateSpecific("vatlayer");
         }
 
-        private static void PopulateMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<VatLayerResponse> resultItem)
+        private void PopulateMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<VatLayerResponse> resultItem, IExternalSearchRequest request)
         {
-            var code = GetOriginEntityCode(resultItem);
+            var code = GetOriginEntityCode(resultItem, request);
 
-            metadata.EntityType = EntityType.Organization;
-            metadata.Name = resultItem.Data.CompanyName;
+            metadata.EntityType = request.EntityMetaData.EntityType;
+            metadata.Name = request.EntityMetaData.Name;
             metadata.OriginEntityCode = code;
-            metadata.Codes.Add(code);
+            metadata.Codes.Add(request.EntityMetaData.OriginEntityCode);
 
             metadata.Properties[VatLayerVocabulary.Organization.Name] = resultItem.Data.CompanyName;
 
@@ -410,6 +427,11 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
         public IEnumerable<EntityType> Accepts(IDictionary<string, object> config, IProvider provider)
         {
+            if (config.TryGetValue(Constants.KeyName.AcceptedEntityType, out var customTypes))
+            {
+                AcceptedEntityTypes = new EntityType[] { customTypes.ToString() };
+            };
+
             return AcceptedEntityTypes;
         }
 
@@ -417,7 +439,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         {
             var jobData = new VatLayerExternalSearchJobData(config);
 
-            foreach (var externalSearchQuery in InternalBuildQueries(context, request, jobData.ApiToken))
+            foreach (var externalSearchQuery in InternalBuildQueries(context, request, jobData.ApiToken, config))
             {
                 yield return externalSearchQuery;
             }

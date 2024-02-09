@@ -14,11 +14,13 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         public struct KeyName
         {
             public const string ApiToken = "apiToken";
+            public const string AcceptedEntityType = "acceptedEntityType";
+            public const string AcceptedVocabKey = "acceptedVocabKey";
 
         }
 
         public static string About { get; set; } = "VatLayer is an enricher for validating and cleaning VAT numbers";
-        public static string Icon { get; set; } = "Resources.vatlayer.png";
+        public static string Icon { get; set; } = "Resources.logo.svg";
         public static string Domain { get; set; } = "https://vatlayer.com/";
 
         public static AuthMethods AuthMethods { get; set; } = new AuthMethods
@@ -31,7 +33,21 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     type = "input",
                     isRequired = true,
                     name = KeyName.ApiToken
-                }
+                },
+                new Control()
+                {
+                    displayName = "Accepted Entity Type",
+                    type = "input",
+                    isRequired = false,
+                    name = KeyName.AcceptedEntityType
+                },
+                new Control()
+                {
+                    displayName = "Accepted Vocab Key",
+                    type = "input",
+                    isRequired = false,
+                    name = KeyName.AcceptedVocabKey
+                },
             }
         };
 
