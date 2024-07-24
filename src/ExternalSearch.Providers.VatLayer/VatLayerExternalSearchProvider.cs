@@ -16,11 +16,11 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 using RestSharp;
-//using RestSharp.Extensions.MonoHttp;
 using EntityType = CluedIn.Core.Data.EntityType;
 
 namespace CluedIn.ExternalSearch.Providers.VatLayer
 {
+    using CluedIn.ExternalSearch.Provider;
 
     /// <summary>The VatLayer graph external search provider.</summary>
     /// <seealso cref="ExternalSearchProviderBase" />
@@ -73,39 +73,31 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         public IEnumerable<EntityType> Accepts(IDictionary<string, object> config, IProvider provider) => this.Accepts(config);
 
         private IEnumerable<EntityType> Accepts(IDictionary<string, object> config)
+            => Accepts(new VatLayerExternalSearchJobData(config));
+
+        private IEnumerable<EntityType> Accepts(VatLayerExternalSearchJobData config)
         {
-            if (config.TryGetValue(Constants.KeyName.AcceptedEntityType, out var acceptedEntityTypeObj) && acceptedEntityTypeObj is string acceptedEntityType && !string.IsNullOrWhiteSpace(acceptedEntityType))
+            if (!string.IsNullOrWhiteSpace(config.AcceptedEntityType))
             {
                 // If configured, only accept the configured entity types
-                return new EntityType[] { acceptedEntityType };
+                return new EntityType[] { config.AcceptedEntityType };
             }
 
             // Fallback to default accepted entity types
             return DefaultAcceptedEntityTypes;
         }
 
-        private bool Accepts(IDictionary<string, object> config, EntityType entityTypeToEvaluate)
+        private bool Accepts(VatLayerExternalSearchJobData config, EntityType entityTypeToEvaluate)
         {
             var configurableAcceptedEntityTypes = this.Accepts(config).ToArray();
 
             return configurableAcceptedEntityTypes.Any(entityTypeToEvaluate.Is);
         }
 
-        /// <summary>Builds the queries.</summary>
-        /// <param name="context">The context.</param>
-        /// <param name="request">The request.</param>
-        /// <returns>The search queries.</returns>
-        public override IEnumerable<IExternalSearchQuery> BuildQueries(ExecutionContext context, IExternalSearchRequest request)
-        {
-            var apiToken = TokenProvider?.ApiToken;
+        public IEnumerable<IExternalSearchQuery> BuildQueries(ExecutionContext context, IExternalSearchRequest request, IDictionary<string, object> config, IProvider provider)
+            => InternalBuildQueries(context, request, new VatLayerExternalSearchJobData(config));
 
-            foreach (var externalSearchQuery in InternalBuildQueries(context, request, apiToken))
-            {
-                yield return externalSearchQuery;
-            }
-        }
-
-        private IEnumerable<IExternalSearchQuery> InternalBuildQueries(ExecutionContext context, IExternalSearchRequest request, string apiToken, IDictionary<string, object> config = null)
+        private IEnumerable<IExternalSearchQuery> InternalBuildQueries(ExecutionContext context, IExternalSearchRequest request, VatLayerExternalSearchJobData config)
         {
             if (context == null)
             {
@@ -119,7 +111,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
             using (context.Log.BeginScope($"{GetType().Name} BuildQueries: request {request}"))
             {
-                if (string.IsNullOrEmpty(apiToken))
+                if (string.IsNullOrEmpty(config.ApiToken))
                 {
                     context.Log.LogError("ApiToken for VatLayer must be provided.");
                     yield break;
@@ -140,9 +132,9 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 var entityType = request.EntityMetaData.EntityType;
 
                 var vatNumber = new HashSet<string>();
-                if (config.TryGetValue(Constants.KeyName.AcceptedVocabKey, out var customVocabKey) && !string.IsNullOrWhiteSpace(customVocabKey?.ToString()))
+                if (!string.IsNullOrWhiteSpace(config.AcceptedVocabKey))
                 {
-                    vatNumber = request.QueryParameters.GetValue<string, HashSet<string>>(config[Constants.KeyName.AcceptedVocabKey].ToString(), new HashSet<string>());
+                    vatNumber = request.QueryParameters.GetValue<string, HashSet<string>>(config.AcceptedVocabKey, new HashSet<string>());
                 }
                 else
                 {
@@ -185,18 +177,10 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             }
         }
 
-        /// <summary>Executes the search.</summary>
-        /// <param name="context">The context.</param>
-        /// <param name="query">The query.</param>
-        /// <returns>The results.</returns>
-        public override IEnumerable<IExternalSearchQueryResult> ExecuteSearch(ExecutionContext context, IExternalSearchQuery query)
+        public IEnumerable<IExternalSearchQueryResult> ExecuteSearch(ExecutionContext context, IExternalSearchQuery query, IDictionary<string, object> config, IProvider provider)
         {
-            var apiToken = TokenProvider?.ApiToken;
-
-            foreach (var externalSearchQueryResult in InternalExecuteSearch(context, query, apiToken))
-            {
-                yield return externalSearchQueryResult;
-            }
+            var jobData = new VatLayerExternalSearchJobData(config);
+            return InternalExecuteSearch(context, query, jobData.ApiToken);
         }
 
         private IEnumerable<IExternalSearchQueryResult> InternalExecuteSearch(ExecutionContext context, IExternalSearchQuery query, string apiToken)
@@ -298,16 +282,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             }
         }
 
-        /// <summary>Builds the clues.</summary>
-        /// <param name="context">The context.</param>
-        /// <param name="query">The query.</param>
-        /// <param name="result">The result.</param>
-        /// <param name="request">The request.</param>
-        /// <returns>The clues.</returns>
-        public override IEnumerable<Clue> BuildClues(ExecutionContext context,
-            IExternalSearchQuery query,
-            IExternalSearchQueryResult result,
-            IExternalSearchRequest request)
+        public IEnumerable<Clue> BuildClues(ExecutionContext context, IExternalSearchQuery query, IExternalSearchQueryResult result, IExternalSearchRequest request, IDictionary<string, object> config, IProvider provider)
         {
             if (context == null)
             {
@@ -344,14 +319,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             }
         }
 
-        /// <summary>Gets the primary entity metadata.</summary>
-        /// <param name="context">The context.</param>
-        /// <param name="result">The result.</param>
-        /// <param name="request">The request.</param>
-        /// <returns>The primary entity metadata.</returns>
-        public override IEntityMetadata GetPrimaryEntityMetadata(ExecutionContext context,
-            IExternalSearchQueryResult result,
-            IExternalSearchRequest request)
+        public IEntityMetadata GetPrimaryEntityMetadata(ExecutionContext context, IExternalSearchQueryResult result, IExternalSearchRequest request, IDictionary<string, object> config, IProvider provider)
         {
             if (context == null)
             {
@@ -378,12 +346,16 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             }
         }
 
-        /// <summary>Gets the preview image.</summary>
-        /// <param name="context">The context.</param>
-        /// <param name="result">The result.</param>
-        /// <param name="request">The request.</param>
-        /// <returns>The preview image.</returns>
         public override IPreviewImage GetPrimaryEntityPreviewImage(ExecutionContext context, IExternalSearchQueryResult result, IExternalSearchRequest request)
+        {
+            // Note: This needs to be cleaned up, but since config and provider is not used in GetPrimaryEntityPreviewImage this is fine.
+            var dummyConfig   = new Dictionary<string, object>();
+            var dummyProvider = new DefaultExternalSearchProviderProvider(context.ApplicationContext, this);
+
+            return GetPrimaryEntityPreviewImage(context, result, request, dummyConfig, dummyProvider);
+        }
+
+        public IPreviewImage GetPrimaryEntityPreviewImage(ExecutionContext context, IExternalSearchQueryResult result, IExternalSearchRequest request, IDictionary<string, object> config, IProvider provider)
         {
             if (context == null)
             {
@@ -442,43 +414,16 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             metadata.Properties[VatLayerVocabulary.Organization.Address] = resultItem.Data.CompanyAddress;
         }
 
-        public IEnumerable<IExternalSearchQuery> BuildQueries(ExecutionContext context, IExternalSearchRequest request, IDictionary<string, object> config, IProvider provider)
-        {
-            var jobData = new VatLayerExternalSearchJobData(config);
-
-            foreach (var externalSearchQuery in InternalBuildQueries(context, request, jobData.ApiToken, config))
-            {
-                yield return externalSearchQuery;
-            }
-        }
-
-        public IEnumerable<IExternalSearchQueryResult> ExecuteSearch(ExecutionContext context, IExternalSearchQuery query, IDictionary<string, object> config, IProvider provider)
-        {
-            var jobData = new VatLayerExternalSearchJobData(config);
-
-            foreach (var externalSearchQueryResult in InternalExecuteSearch(context, query, jobData.ApiToken))
-            {
-                yield return externalSearchQueryResult;
-            }
-        }
-
-        public IEnumerable<Clue> BuildClues(ExecutionContext context, IExternalSearchQuery query, IExternalSearchQueryResult result, IExternalSearchRequest request, IDictionary<string, object> config, IProvider provider)
-        {
-            return BuildClues(context, query, result, request);
-        }
-
-        public IEntityMetadata GetPrimaryEntityMetadata(ExecutionContext context, IExternalSearchQueryResult result, IExternalSearchRequest request, IDictionary<string, object> config, IProvider provider)
-        {
-            return GetPrimaryEntityMetadata(context, result, request);
-        }
-
-        public IPreviewImage GetPrimaryEntityPreviewImage(ExecutionContext context, IExternalSearchQueryResult result, IExternalSearchRequest request, IDictionary<string, object> config, IProvider provider)
-        {
-            return GetPrimaryEntityPreviewImage(context, result, request);
-        }
-
         // Since this is a configurable external search provider, theses methods should never be called
         public override bool Accepts(EntityType entityType) => throw new NotSupportedException();
+        public override IEnumerable<IExternalSearchQuery> BuildQueries(ExecutionContext context, IExternalSearchRequest request) => throw new NotSupportedException();
+        public override IEnumerable<IExternalSearchQueryResult> ExecuteSearch(ExecutionContext context, IExternalSearchQuery query) => throw new NotSupportedException();
+        public override IEnumerable<Clue> BuildClues(ExecutionContext context, IExternalSearchQuery query, IExternalSearchQueryResult result, IExternalSearchRequest request) => throw new NotSupportedException();
+        public override IEntityMetadata GetPrimaryEntityMetadata(ExecutionContext context, IExternalSearchQueryResult result, IExternalSearchRequest request) => throw new NotSupportedException();
+
+        /**********************************************************************************************************
+         * PROPERTIES
+         **********************************************************************************************************/
 
         public string Icon { get; } = Constants.Icon;
         public string Domain { get; } = Constants.Domain;
