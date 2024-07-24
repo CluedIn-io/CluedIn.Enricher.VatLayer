@@ -26,13 +26,18 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
     /// <seealso cref="ExternalSearchProviderBase" />
     public class VatLayerExternalSearchProvider : ExternalSearchProviderBase, IExtendedEnricherMetadata, IConfigurableExternalSearchProvider
     {
-        private static EntityType[] AcceptedEntityTypes = { EntityType.Organization };
+        /**********************************************************************************************************
+         * FIELDS
+         **********************************************************************************************************/
+
+        private static readonly EntityType[] DefaultAcceptedEntityTypes = { EntityType.Organization };
+
         /**********************************************************************************************************
         * CONSTRUCTORS
         **********************************************************************************************************/
 
         public VatLayerExternalSearchProvider()
-           : base(Constants.ProviderId, AcceptedEntityTypes)
+           : base(Constants.ProviderId, DefaultAcceptedEntityTypes)
         {
             var nameBasedTokenProvider = new NameBasedTokenProvider("VatLayer");
 
@@ -64,6 +69,27 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         /**********************************************************************************************************
          * METHODS
          **********************************************************************************************************/
+
+        public IEnumerable<EntityType> Accepts(IDictionary<string, object> config, IProvider provider) => this.Accepts(config);
+
+        private IEnumerable<EntityType> Accepts(IDictionary<string, object> config)
+        {
+            if (config.TryGetValue(Constants.KeyName.AcceptedEntityType, out var acceptedEntityTypeObj) && acceptedEntityTypeObj is string acceptedEntityType && !string.IsNullOrWhiteSpace(acceptedEntityType))
+            {
+                // If configured, only accept the configured entity types
+                return new EntityType[] { acceptedEntityType };
+            }
+
+            // Fallback to default accepted entity types
+            return DefaultAcceptedEntityTypes;
+        }
+
+        private bool Accepts(IDictionary<string, object> config, EntityType entityTypeToEvaluate)
+        {
+            var configurableAcceptedEntityTypes = this.Accepts(config).ToArray();
+
+            return configurableAcceptedEntityTypes.Any(entityTypeToEvaluate.Is);
+        }
 
         /// <summary>Builds the queries.</summary>
         /// <param name="context">The context.</param>
@@ -98,19 +124,10 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     context.Log.LogError("ApiToken for VatLayer must be provided.");
                     yield break;
                 }
-                if (config.TryGetValue(Constants.KeyName.AcceptedEntityType, out var customType) && !string.IsNullOrWhiteSpace(customType?.ToString()))
-                {
-                    if (!request.EntityMetaData.EntityType.Is(customType.ToString()))
-                    {
-                        context.Log.LogTrace("Unacceptable entity type from '{EntityName}', entity code '{EntityCode}'", request.EntityMetaData.DisplayName, request.EntityMetaData.EntityType.Code);
 
-                        yield break;
-                    }
-                }
-                else if (!Accepts(request.EntityMetaData.EntityType))
+                if (!this.Accepts(config, request.EntityMetaData.EntityType))
                 {
                     context.Log.LogTrace("Unacceptable entity type from '{EntityName}', entity code '{EntityCode}'", request.EntityMetaData.DisplayName, request.EntityMetaData.EntityType.Code);
-
                     yield break;
                 }
 
@@ -425,16 +442,6 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             metadata.Properties[VatLayerVocabulary.Organization.Address] = resultItem.Data.CompanyAddress;
         }
 
-        public IEnumerable<EntityType> Accepts(IDictionary<string, object> config, IProvider provider)
-        {
-            if (config.TryGetValue(Constants.KeyName.AcceptedEntityType, out var customTypes))
-            {
-                AcceptedEntityTypes = new EntityType[] { customTypes.ToString() };
-            };
-
-            return AcceptedEntityTypes;
-        }
-
         public IEnumerable<IExternalSearchQuery> BuildQueries(ExecutionContext context, IExternalSearchRequest request, IDictionary<string, object> config, IProvider provider)
         {
             var jobData = new VatLayerExternalSearchJobData(config);
@@ -469,6 +476,9 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         {
             return GetPrimaryEntityPreviewImage(context, result, request);
         }
+
+        // Since this is a configurable external search provider, theses methods should never be called
+        public override bool Accepts(EntityType entityType) => throw new NotSupportedException();
 
         public string Icon { get; } = Constants.Icon;
         public string Domain { get; } = Constants.Domain;
