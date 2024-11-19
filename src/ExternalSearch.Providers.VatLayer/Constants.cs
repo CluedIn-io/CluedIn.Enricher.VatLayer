@@ -25,28 +25,31 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
         public static AuthMethods AuthMethods { get; set; } = new AuthMethods
         {
-            token = new List<Control>()
+            Token = new List<Control>()
             {
                 new Control()
                 {
-                    displayName = "Api Key",
-                    type = "input",
-                    isRequired = true,
-                    name = KeyName.ApiToken
+                    DisplayName = "Api Key",
+                    Type = "input",
+                    IsRequired = true,
+                    Name = KeyName.ApiToken,
+                    Help = "The key to authenticate access to the Vatlayer API."
                 },
                 new Control()
                 {
-                    displayName = "Accepted Entity Type",
-                    type = "input",
-                    isRequired = true,
-                    name = KeyName.AcceptedEntityType
+                    DisplayName = "Accepted Entity Type",
+                    Type = "input",
+                    IsRequired = true,
+                    Name = KeyName.AcceptedEntityType,
+                    Help = "The entity type that defines the golden records you want to enrich (e.g., /Organization)."
                 },
                 new Control()
                 {
-                    displayName = "Accepted Vocab Key",
-                    type = "input",
-                    isRequired = false,
-                    name = KeyName.AcceptedVocabKey
+                    DisplayName = "Accepted Vocabulary Key",
+                    Type = "input",
+                    IsRequired = false,
+                    Name = KeyName.AcceptedVocabKey,
+                    Help = "The vocabulary key that contains the VAT numbers of companies you want to enrich (e.g., organization.vat)."
                 },
             }
         };
