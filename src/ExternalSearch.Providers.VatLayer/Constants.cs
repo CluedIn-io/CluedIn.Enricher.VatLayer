@@ -70,7 +70,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 new Control()
                 {
                     DisplayName = "Accepted Entity Type",
-                    Type = "input",
+                    Type = "entityTypeSelector",
                     IsRequired = true,
                     Name = KeyName.AcceptedEntityType,
                     Help = "The entity type that defines the golden records you want to enrich (e.g., /Organization)."
@@ -78,7 +78,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 new Control()
                 {
                     DisplayName = "Accepted Vocabulary Key",
-                    Type = "input",
+                    Type = "vocabularyKeySelector",
                     IsRequired = false,
                     Name = KeyName.AcceptedVocabKey,
                     Help = "The vocabulary key that contains the VAT numbers of companies you want to enrich (e.g., organization.vat)."
