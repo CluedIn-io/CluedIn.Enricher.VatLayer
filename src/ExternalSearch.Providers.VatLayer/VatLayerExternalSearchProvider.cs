@@ -9,22 +9,24 @@ using CluedIn.Core.Data.Parts;
 using CluedIn.Core.Data.Relational;
 using CluedIn.Core.ExternalSearch;
 using CluedIn.Core.Providers;
+using CluedIn.Core.Connectors;
 using CluedIn.ExternalSearch.Providers.VatLayer.Models;
 using CluedIn.ExternalSearch.Providers.VatLayer.Utility;
 using CluedIn.ExternalSearch.Providers.VatLayer.Vocabularies;
+
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-
 using RestSharp;
 using EntityType = CluedIn.Core.Data.EntityType;
 
 namespace CluedIn.ExternalSearch.Providers.VatLayer
 {
+    using System.Text.RegularExpressions;
     using CluedIn.ExternalSearch.Provider;
 
     /// <summary>The VatLayer graph external search provider.</summary>
     /// <seealso cref="ExternalSearchProviderBase" />
-    public class VatLayerExternalSearchProvider : ExternalSearchProviderBase, IExtendedEnricherMetadata, IConfigurableExternalSearchProvider
+    public class VatLayerExternalSearchProvider : ExternalSearchProviderBase, IExtendedEnricherMetadata, IConfigurableExternalSearchProvider, IExternalSearchProviderWithVerifyConnection
     {
         /**********************************************************************************************************
          * FIELDS
@@ -374,6 +376,59 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             }
         }
 
+
+        public ConnectionVerificationResult VerifyConnection(ExecutionContext context, IReadOnlyDictionary<string, object> config)
+        {
+            IDictionary<string, object> configDict = config.ToDictionary(entry => entry.Key, entry => entry.Value);
+            var jobData = new VatLayerExternalSearchJobData(configDict);
+
+            var vat = WebUtility.UrlEncode("GB765970776");
+            var client = new RestClient("http://www.apilayer.net/api");
+            var request = new RestRequest($"validate?access_key={jobData.ApiToken}&vat_number={vat}&format=1", Method.GET);
+
+            var response = client.ExecuteAsync<VatLayerResponse>(request).Result;
+
+            return ConstructVerifyConnectionResponse(response);
+        }
+
+        private ConnectionVerificationResult ConstructVerifyConnectionResponse(IRestResponse<VatLayerResponse> response)
+        {
+            var isSuccessResponse = response.IsSuccessful;
+            var errorMessageBase = $"{Constants.ProviderName} returned \"{(int)response.StatusCode} {response.StatusDescription}\".";
+            if (response.ErrorException != null)
+            {
+                return new ConnectionVerificationResult(false, $"{errorMessageBase} {(!string.IsNullOrWhiteSpace(response.ErrorException.Message) ? response.ErrorException.Message : "This could be due to breaking changes in the external system")}.");
+            }
+
+            var responseData = response.Data;
+            if (responseData == null || (responseData != null && !responseData.Valid))
+            {
+                VatLayerErrorResponse content;
+                try
+                {
+                    content = JsonConvert.DeserializeObject<VatLayerErrorResponse>(response.Content);
+                    if (!string.IsNullOrWhiteSpace(content.Error.Type) && content.Error.Type.Equals("invalid_access_key", StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        return new ConnectionVerificationResult(false, $"{Constants.ProviderName} returned \"401 Unauthorized\". This could be due to an invalid API key.");
+                    }
+                }
+                catch (Exception) {
+                }
+
+                isSuccessResponse = false;
+            }
+
+            var regex = new Regex(@"\<(html|head|body|div|span|img|p\>|a href)", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace);
+            var isHtml = regex.IsMatch(response.Content);
+
+            var errorMessage = isSuccessResponse ? string.Empty
+                : string.IsNullOrWhiteSpace(response.Content) || isHtml
+                    ? $"{errorMessageBase} This could be due to breaking changes in the external system."
+                    : $"{errorMessageBase} {response.Content}.";
+
+            return new ConnectionVerificationResult(isSuccessResponse, errorMessage);
+        }
+
         private IEntityMetadata CreateMetadata(IExternalSearchQueryResult<VatLayerResponse> resultItem, IExternalSearchRequest request)
         {
             var metadata = new EntityMetadataPart();
@@ -419,7 +474,5 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         public IEnumerable<Control> Properties { get; } = Constants.Properties;
         public Guide Guide { get; } = Constants.Guide;
         public IntegrationType Type { get; } = Constants.IntegrationType;
-
-
     }
 }
