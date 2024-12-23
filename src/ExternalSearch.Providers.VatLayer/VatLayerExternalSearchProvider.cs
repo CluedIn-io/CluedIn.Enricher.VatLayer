@@ -401,18 +401,18 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             }
 
             var responseData = response.Data;
-            if (responseData == null || (responseData != null && !responseData.Valid))
+            if (responseData?.Valid != true)
             {
-                VatLayerErrorResponse content;
                 try
                 {
-                    content = JsonConvert.DeserializeObject<VatLayerErrorResponse>(response.Content);
+                    var content = JsonConvert.DeserializeObject<VatLayerErrorResponse>(response.Content);
                     if (!string.IsNullOrWhiteSpace(content.Error.Type) && content.Error.Type.Equals("invalid_access_key", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         return new ConnectionVerificationResult(false, $"{Constants.ProviderName} returned \"401 Unauthorized\". This could be due to an invalid API key.");
                     }
                 }
-                catch (Exception) {
+                catch (Exception exception) {
+                    return new ConnectionVerificationResult(false, $"Error deserializing request. The exception received was:\n {exception.Message}");
                 }
 
                 isSuccessResponse = false;
