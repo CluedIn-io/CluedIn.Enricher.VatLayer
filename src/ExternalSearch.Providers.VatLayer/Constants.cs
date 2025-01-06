@@ -59,15 +59,22 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         {
             Token = new List<Control>()
             {
-                new Control()
+                new()
                 {
                     DisplayName = "Api Key",
                     Type = "input",
                     IsRequired = true,
                     Name = KeyName.ApiToken,
-                    Help = "The key to authenticate access to the Vatlayer API."
+                    Help = "The key to authenticate access to the Vatlayer API.",
+                    ValidationRules = new List<Dictionary<string, string>>()
+                    {
+                        new() {
+                            { "regex", "\\s" },
+                            { "message", "Spaces are not allowed" }
+                        }
+                    },
                 },
-                new Control()
+                new()
                 {
                     DisplayName = "Accepted Entity Type",
                     Type = "entityTypeSelector",
@@ -75,7 +82,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     Name = KeyName.AcceptedEntityType,
                     Help = "The entity type that defines the golden records you want to enrich (e.g., /Organization)."
                 },
-                new Control()
+                new()
                 {
                     DisplayName = "Accepted Vocabulary Key",
                     Type = "vocabularyKeySelector",
