@@ -61,7 +61,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             {
                 new()
                 {
-                    DisplayName = "API Key",
+                    DisplayName = "API Access Key",
                     Type = "password",
                     IsRequired = true,
                     Name = KeyName.ApiToken,
