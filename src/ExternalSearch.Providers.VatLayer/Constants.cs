@@ -61,8 +61,8 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             {
                 new()
                 {
-                    DisplayName = "Api Key",
-                    Type = "input",
+                    DisplayName = "API Access Key",
+                    Type = "password",
                     IsRequired = true,
                     Name = KeyName.ApiToken,
                     Help = "The key to authenticate access to the Vatlayer API.",
