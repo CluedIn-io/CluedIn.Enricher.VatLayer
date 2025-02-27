@@ -121,7 +121,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
                 if (!this.Accepts(config, request.EntityMetaData.EntityType))
                 {
-                    context.Log.LogTrace("Unacceptable entity type from '{EntityName}', entity code '{EntityCode}'", request.EntityMetaData.DisplayName, request.EntityMetaData.EntityType.Code);
+                    context.Log.LogTrace("Unacceptable business domain from '{EntityName}', entity code '{EntityCode}'", request.EntityMetaData.DisplayName, request.EntityMetaData.EntityType.Code);
                     yield break;
                 }
 
