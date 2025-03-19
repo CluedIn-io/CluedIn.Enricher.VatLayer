@@ -406,7 +406,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 try
                 {
                     var content = JsonConvert.DeserializeObject<VatLayerErrorResponse>(response.Content);
-                    if (!string.IsNullOrWhiteSpace(content.Error.Type) && content.Error.Type.Equals("invalid_access_key", StringComparison.OrdinalIgnoreCase) == true)
+                    if (!string.IsNullOrWhiteSpace(content?.Error?.Type) && content.Error.Type.Equals("invalid_access_key", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         return new ConnectionVerificationResult(false, $"{Constants.ProviderName} returned \"401 Unauthorized\". This could be due to an invalid API key.");
                     }
