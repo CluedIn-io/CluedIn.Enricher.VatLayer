@@ -382,7 +382,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             IDictionary<string, object> configDict = config.ToDictionary(entry => entry.Key, entry => entry.Value);
             var jobData = new VatLayerExternalSearchJobData(configDict);
 
-            var vat = WebUtility.UrlEncode("GB765970776");
+            var vat = WebUtility.UrlEncode("IE3539798LH");
             var client = new RestClient("http://www.apilayer.net/api");
             var request = new RestRequest($"validate?access_key={jobData.ApiToken}&vat_number={vat}&format=1", Method.GET);
 
