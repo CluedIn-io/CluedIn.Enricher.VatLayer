@@ -19,7 +19,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     "type": "list-item",
                     "children": [
                       {
-                        "text": "Add the entity type to specify the golden records you want to enrich. Only golden records belonging to that entity type will be enriched."
+                        "text": "Add the business domain to specify the golden records you want to enrich. Only golden records belonging to that business domain will be enriched."
                       }
                     ]
                   },
@@ -59,23 +59,30 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         {
             Token = new List<Control>()
             {
-                new Control()
+                new()
                 {
-                    DisplayName = "Api Key",
-                    Type = "input",
+                    DisplayName = "API Access Key",
+                    Type = "password",
                     IsRequired = true,
                     Name = KeyName.ApiToken,
-                    Help = "The key to authenticate access to the Vatlayer API."
+                    Help = "The key to authenticate access to the Vatlayer API.",
+                    ValidationRules = new List<Dictionary<string, string>>()
+                    {
+                        new() {
+                            { "regex", "\\s" },
+                            { "message", "Spaces are not allowed" }
+                        }
+                    },
                 },
-                new Control()
+                new()
                 {
-                    DisplayName = "Accepted Entity Type",
+                    DisplayName = "Accepted Business Domain",
                     Type = "entityTypeSelector",
                     IsRequired = true,
                     Name = KeyName.AcceptedEntityType,
-                    Help = "The entity type that defines the golden records you want to enrich (e.g., /Organization)."
+                    Help = "The business domain that defines the golden records you want to enrich (e.g., /Organization)."
                 },
-                new Control()
+                new()
                 {
                     DisplayName = "Accepted Vocabulary Key",
                     Type = "vocabularyKeySelector",
