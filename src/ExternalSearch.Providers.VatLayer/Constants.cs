@@ -86,7 +86,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 {
                     DisplayName = "Accepted Vocabulary Key",
                     Type = "vocabularyKeySelector",
-                    IsRequired = false,
+                    IsRequired = true,
                     Name = KeyName.AcceptedVocabKey,
                     Help = "The vocabulary key that contains the VAT numbers of companies you want to enrich (e.g., organization.vat)."
                 },
