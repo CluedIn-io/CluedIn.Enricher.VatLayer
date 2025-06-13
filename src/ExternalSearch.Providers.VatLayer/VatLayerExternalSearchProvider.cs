@@ -310,7 +310,8 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             {
                 var resultItem = result.As<VatLayerResponse>();
                 var dirtyClue = request.CustomQueryInput.ToString();
-                var clue = new Clue(request.EntityMetaData.OriginEntityCode, context.Organization);
+                var code = new EntityCode(request.EntityMetaData.OriginEntityCode.Type, "vatlayer", $"{query.QueryKey}{request.EntityMetaData.OriginEntityCode}".ToDeterministicGuid());
+                var clue = new Clue(code, context.Organization);
 
                 PopulateMetadata(clue.Data.EntityData, resultItem, request);
 
@@ -382,7 +383,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             IDictionary<string, object> configDict = config.ToDictionary(entry => entry.Key, entry => entry.Value);
             var jobData = new VatLayerExternalSearchJobData(configDict);
 
-            var vat = WebUtility.UrlEncode("GB765970776");
+            var vat = WebUtility.UrlEncode("IE3539798LH");
             var client = new RestClient("http://www.apilayer.net/api");
             var request = new RestRequest($"validate?access_key={jobData.ApiToken}&vat_number={vat}&format=1", Method.GET);
 
@@ -406,7 +407,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 try
                 {
                     var content = JsonConvert.DeserializeObject<VatLayerErrorResponse>(response.Content);
-                    if (!string.IsNullOrWhiteSpace(content.Error.Type) && content.Error.Type.Equals("invalid_access_key", StringComparison.OrdinalIgnoreCase) == true)
+                    if (!string.IsNullOrWhiteSpace(content?.Error?.Type) && content.Error.Type.Equals("invalid_access_key", StringComparison.OrdinalIgnoreCase) == true)
                     {
                         return new ConnectionVerificationResult(false, $"{Constants.ProviderName} returned \"401 Unauthorized\". This could be due to an invalid API key.");
                     }
@@ -440,9 +441,12 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
         private void PopulateMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<VatLayerResponse> resultItem, IExternalSearchRequest request)
         {
+            var code = new EntityCode(request.EntityMetaData.OriginEntityCode.Type, "vatlayer", $"{request.Queries.FirstOrDefault()?.QueryKey}{request.EntityMetaData.OriginEntityCode}".ToDeterministicGuid());
+
             metadata.EntityType = request.EntityMetaData.EntityType;
             metadata.Name = request.EntityMetaData.Name;
-            metadata.OriginEntityCode = request.EntityMetaData.OriginEntityCode;
+            metadata.OriginEntityCode = code;
+            metadata.Codes.Add(request.EntityMetaData.OriginEntityCode);
 
             metadata.Properties[VatLayerVocabulary.Organization.Name] = resultItem.Data.CompanyName;
 
