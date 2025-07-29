@@ -244,7 +244,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                         }
                         else
                         {
-                            var content = JsonConvert.DeserializeObject<dynamic>(response.Content);
+                            var content = JsonConvert.DeserializeObject<dynamic>(string.IsNullOrEmpty(response?.Content) ? "{}" : response.Content);
 
                             if (content?.error?.type == "rate_limit_reached" || content?.error?.code == "106")
                             {
@@ -460,10 +460,12 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         {
             var privateApplicationContext = executionContext.ApplicationContext.Container.Resolve<IPrivateApplicationContext>();
             var lockingScope = privateApplicationContext.CreateLockingScope();
+            var delay = TimeSpan.FromSeconds(1);
+
             using (lockingScope.GetClusterWideExclusiveLockAsync($"{nameof(VatLayerExternalSearchProvider)}", TimeSpan.Zero).GetAwaiter().GetResult())
             {
-                executionContext.Log.LogDebug($"Sleeping thread for 1000ms due to TooManyRequest response received");
-                Thread.Sleep(1000);
+                executionContext.Log.LogDebug($"Sleeping thread for {delay.TotalSeconds:0} seconds due to TooManyRequest response received");
+                Thread.Sleep(delay);
             }
         }
 
