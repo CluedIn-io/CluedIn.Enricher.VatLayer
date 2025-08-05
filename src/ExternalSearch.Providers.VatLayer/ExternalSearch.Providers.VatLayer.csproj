@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="CluedIn.Core" />
     <PackageReference Include="CluedIn.ExternalSearch" />
+    <PackageReference Include="CluedIn.Integration.PrivateServices" />
   </ItemGroup>
   <PropertyGroup>
     <LangVersion>preview</LangVersion>
