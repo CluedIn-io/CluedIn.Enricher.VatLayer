@@ -120,8 +120,8 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
                 if (string.IsNullOrEmpty(config.ApiToken))
                 {
-                    context.Log.LogWarning("API Access Key for VatLayer must be provided.");
-                    throw new Exception($"Unable to generate queries for {entityName}. API Access Key was not provided.");
+                    context.Log.LogError("ApiToken for VatLayer must be provided.");
+                    yield break;
                 }
 
                 if (!this.Accepts(config, request.EntityMetaData.EntityType))
