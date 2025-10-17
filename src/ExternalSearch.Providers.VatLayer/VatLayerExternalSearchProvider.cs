@@ -134,7 +134,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
                 var existingResults = request.GetQueryResults<VatLayerResponse>(this).ToList();
 
-                bool vatFilter(string value) => existingResults.Any(r => string.Equals(r.Data.VatNumber, value, StringComparison.InvariantCultureIgnoreCase));
+                bool existingDataFilter(string value) => existingResults.Any(r => string.Equals(r.Data.VatNumber, value, StringComparison.InvariantCultureIgnoreCase));
 
                 var entityType = request.EntityMetaData.EntityType;
 
@@ -154,7 +154,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     throw new Exception($"Unable to generate queries for {entityName}. VAT number is empty.");
                 }
 
-                var filteredValues = vatNumber.Where(v => !vatFilter(v)).ToArray();
+                var filteredValues = vatNumber.Where(v => !existingDataFilter(v)).ToArray();
 
                 if (!filteredValues.Any())
                 {
@@ -170,7 +170,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
                         if (string.IsNullOrWhiteSpace(sanitizedValue))
                         {
-                            throw new Exception($"Unable to generate queries for {entityName}. VAT number was identified as invalid number and filtered out.");
+                            throw new Exception($"Unable to generate queries for {entityName}. VAT number is invalid and has been filtered out.");
                         }
 
                         if (value != sanitizedValue)
