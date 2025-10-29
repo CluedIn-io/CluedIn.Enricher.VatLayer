@@ -116,6 +116,8 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
             using (context.Log.BeginScope($"{GetType().Name} BuildQueries: request {request}"))
             {
+                var entityName = !string.IsNullOrEmpty(request.EntityMetaData.Name) ? request.EntityMetaData.Name : request.EntityMetaData.DisplayName;
+
                 if (string.IsNullOrEmpty(config.ApiToken))
                 {
                     context.Log.LogError("ApiToken for VatLayer must be provided.");
@@ -132,7 +134,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
                 var existingResults = request.GetQueryResults<VatLayerResponse>(this).ToList();
 
-                bool vatFilter(string value) => existingResults.Any(r => string.Equals(r.Data.VatNumber, value, StringComparison.InvariantCultureIgnoreCase));
+                bool existingDataFilter(string value) => existingResults.Any(r => string.Equals(r.Data.VatNumber, value, StringComparison.InvariantCultureIgnoreCase));
 
                 var entityType = request.EntityMetaData.EntityType;
 
@@ -149,36 +151,40 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 if (!vatNumber.Any())
                 {
                     context.Log.LogTrace("No query parameter for '{VatNumber}' in request, skipping build queries", Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber);
+                    throw new Exception($"Unable to generate queries for {entityName}. VAT number is empty.");
+                }
+
+                var filteredValues = vatNumber.Where(v => !existingDataFilter(v)).ToArray();
+
+                if (!filteredValues.Any())
+                {
+                    context.Log.LogWarning("Filter removed all VAT numbers, skipping processing. Original '{Original}'", string.Join(",", vatNumber));
                 }
                 else
                 {
-                    var filteredValues = vatNumber.Where(v => !vatFilter(v)).ToArray();
+                    foreach (var value in filteredValues)
+                    {
+                        request.CustomQueryInput = vatNumber.ElementAt(0);
+                        var cleaner = new VatNumberCleaner();
+                        var sanitizedValue = cleaner.CheckVATNumber(value);
 
-                    if (!filteredValues.Any())
-                    {
-                        context.Log.LogWarning("Filter removed all VAT numbers, skipping processing. Original '{Original}'", string.Join(",", vatNumber));
-                    }
-                    else
-                    {
-                        foreach (var value in filteredValues)
+                        if (string.IsNullOrWhiteSpace(sanitizedValue))
                         {
-                            request.CustomQueryInput = vatNumber.ElementAt(0);
-                            var cleaner = new VatNumberCleaner();
-                            var sanitizedValue = cleaner.CheckVATNumber(value);
-
-                            if (value != sanitizedValue)
-                            {
-                                context.Log.LogTrace("Sanitized VAT number. Original '{OriginalValue}', Updated '{SanitizedValue}'", value, sanitizedValue);
-                            }
-
-                            context.Log.LogInformation("External search query produced, ExternalSearchQueryParameter: '{Identifier}' EntityType: '{EntityCode}' Value: '{SanitizedValue}'", ExternalSearchQueryParameter.Identifier, entityType.Code, sanitizedValue);
-
-                            yield return new ExternalSearchQuery(this, entityType, ExternalSearchQueryParameter.Identifier, sanitizedValue);
+                            throw new Exception($"Unable to generate queries for {entityName}. VAT number is invalid and has been filtered out.");
                         }
-                    }
 
-                    context.Log.LogTrace("Finished building queries for '{Name}'", request.EntityMetaData.Name);
+                        if (value != sanitizedValue)
+                        {
+                            context.Log.LogTrace("Sanitized VAT number. Original '{OriginalValue}', Updated '{SanitizedValue}'", value, sanitizedValue);
+                        }
+
+                        context.Log.LogInformation("External search query produced, ExternalSearchQueryParameter: '{Identifier}' EntityType: '{EntityCode}' Value: '{SanitizedValue}'", ExternalSearchQueryParameter.Identifier, entityType.Code, sanitizedValue);
+
+                        yield return new ExternalSearchQuery(this, entityType, ExternalSearchQueryParameter.Identifier, sanitizedValue);
+                    }
                 }
+
+                context.Log.LogTrace("Finished building queries for '{Name}'", request.EntityMetaData.Name);
             }
         }
 
@@ -274,8 +280,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                             $"External search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' produced no results - StatusCode: '{response.StatusCode}' Content: '{response.Content}'";
 
                         context.Log.LogWarning(diagnostic);
-
-                        yield break;
+                        throw new ApplicationException(diagnostic);
                     }
                     else if (response.ErrorException != null)
                     {
