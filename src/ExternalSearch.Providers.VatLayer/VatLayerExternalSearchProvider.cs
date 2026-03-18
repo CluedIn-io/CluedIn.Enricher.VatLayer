@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading;
 
 using CluedIn.Core;
 using CluedIn.Core.Data;
@@ -13,11 +14,13 @@ using CluedIn.Core.Connectors;
 using CluedIn.ExternalSearch.Providers.VatLayer.Models;
 using CluedIn.ExternalSearch.Providers.VatLayer.Utility;
 using CluedIn.ExternalSearch.Providers.VatLayer.Vocabularies;
+using CluedIn.Integration.PrivateServices.AppContext;
 
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RestSharp;
 using EntityType = CluedIn.Core.Data.EntityType;
+using ExecutionContext = CluedIn.Core.ExecutionContext;
 
 namespace CluedIn.ExternalSearch.Providers.VatLayer
 {
@@ -113,6 +116,8 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
             using (context.Log.BeginScope($"{GetType().Name} BuildQueries: request {request}"))
             {
+                var entityName = !string.IsNullOrEmpty(request.EntityMetaData.Name) ? request.EntityMetaData.Name : request.EntityMetaData.DisplayName;
+
                 if (string.IsNullOrEmpty(config.ApiToken))
                 {
                     context.Log.LogError("ApiToken for VatLayer must be provided.");
@@ -129,7 +134,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
                 var existingResults = request.GetQueryResults<VatLayerResponse>(this).ToList();
 
-                bool vatFilter(string value) => existingResults.Any(r => string.Equals(r.Data.VatNumber, value, StringComparison.InvariantCultureIgnoreCase));
+                bool existingDataFilter(string value) => existingResults.Any(r => string.Equals(r.Data.VatNumber, value, StringComparison.InvariantCultureIgnoreCase));
 
                 var entityType = request.EntityMetaData.EntityType;
 
@@ -146,43 +151,53 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 if (!vatNumber.Any())
                 {
                     context.Log.LogTrace("No query parameter for '{VatNumber}' in request, skipping build queries", Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber);
+                    throw new Exception($"Unable to generate queries for {entityName}. VAT number is empty.");
+                }
+
+                var filteredValues = vatNumber.Where(v => !existingDataFilter(v)).ToArray();
+
+                if (!filteredValues.Any())
+                {
+                    context.Log.LogWarning("Filter removed all VAT numbers, skipping processing. Original '{Original}'", string.Join(",", vatNumber));
                 }
                 else
                 {
-                    var filteredValues = vatNumber.Where(v => !vatFilter(v)).ToArray();
+                    foreach (var value in filteredValues)
+                    {
+                        request.CustomQueryInput = vatNumber.ElementAt(0);
+                        var cleaner = new VatNumberCleaner();
+                        var sanitizedValue = cleaner.CheckVATNumber(value);
 
-                    if (!filteredValues.Any())
-                    {
-                        context.Log.LogWarning("Filter removed all VAT numbers, skipping processing. Original '{Original}'", string.Join(",", vatNumber));
-                    }
-                    else
-                    {
-                        foreach (var value in filteredValues)
+                        if (string.IsNullOrWhiteSpace(sanitizedValue))
                         {
-                            request.CustomQueryInput = vatNumber.ElementAt(0);
-                            var cleaner = new VatNumberCleaner();
-                            var sanitizedValue = cleaner.CheckVATNumber(value);
-
-                            if (value != sanitizedValue)
-                            {
-                                context.Log.LogTrace("Sanitized VAT number. Original '{OriginalValue}', Updated '{SanitizedValue}'", value, sanitizedValue);
-                            }
-
-                            context.Log.LogInformation("External search query produced, ExternalSearchQueryParameter: '{Identifier}' EntityType: '{EntityCode}' Value: '{SanitizedValue}'", ExternalSearchQueryParameter.Identifier, entityType.Code, sanitizedValue);
-
-                            yield return new ExternalSearchQuery(this, entityType, ExternalSearchQueryParameter.Identifier, sanitizedValue);
+                            throw new Exception($"Unable to generate queries for {entityName}. VAT number is invalid and has been filtered out.");
                         }
-                    }
 
-                    context.Log.LogTrace("Finished building queries for '{Name}'", request.EntityMetaData.Name);
+                        if (value != sanitizedValue)
+                        {
+                            context.Log.LogTrace("Sanitized VAT number. Original '{OriginalValue}', Updated '{SanitizedValue}'", value, sanitizedValue);
+                        }
+
+                        context.Log.LogInformation("External search query produced, ExternalSearchQueryParameter: '{Identifier}' EntityType: '{EntityCode}' Value: '{SanitizedValue}'", ExternalSearchQueryParameter.Identifier, entityType.Code, sanitizedValue);
+
+                        yield return new ExternalSearchQuery(this, entityType, ExternalSearchQueryParameter.Identifier, sanitizedValue);
+                    }
                 }
+
+                context.Log.LogTrace("Finished building queries for '{Name}'", request.EntityMetaData.Name);
             }
         }
 
         public IEnumerable<IExternalSearchQueryResult> ExecuteSearch(ExecutionContext context, IExternalSearchQuery query, IDictionary<string, object> config, IProvider provider)
         {
             var jobData = new VatLayerExternalSearchJobData(config);
-            return InternalExecuteSearch(context, query, jobData.ApiToken);
+
+            return ActionExtensions.ExecuteWithRetry(
+                () => InternalExecuteSearch(context, query, jobData.ApiToken).ToArray(),
+                retryInterval: TimeSpan.FromSeconds(1),
+                retryCount: 1000,
+                isTransient: ex => ex.IsTransient() || ex.ToString().Contains("TooManyRequests")
+            );
         }
 
         private IEnumerable<IExternalSearchQueryResult> InternalExecuteSearch(ExecutionContext context, IExternalSearchQuery query, string apiToken)
@@ -235,12 +250,20 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                         }
                         else
                         {
+                            var content = JsonConvert.DeserializeObject<dynamic>(string.IsNullOrEmpty(response?.Content) ? "{}" : response.Content);
+
+                            if (content?.error?.type == "rate_limit_reached" || content?.error?.code == "106")
+                            {
+                                WaitDueToTooManyRequests(context, response);
+
+                                throw new Exception($"Too many requests - Call to VatLayer returned {content.error.type}");
+                            }
+
                             var diagnostic =
                                 $"Failed external search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' - StatusCode: '{response.StatusCode}' Content: '{response.Content}'";
 
                             context.Log.LogError(diagnostic);
 
-                            var content = JsonConvert.DeserializeObject<dynamic>(response.Content);
                             if (content.error != null)
                             {
                                 throw new InvalidOperationException(
@@ -257,8 +280,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                             $"External search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' produced no results - StatusCode: '{response.StatusCode}' Content: '{response.Content}'";
 
                         context.Log.LogWarning(diagnostic);
-
-                        yield break;
+                        throw new ApplicationException(diagnostic);
                     }
                     else if (response.ErrorException != null)
                     {
@@ -437,6 +459,19 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             PopulateMetadata(metadata, resultItem, request);
 
             return metadata;
+        }
+
+        internal static void WaitDueToTooManyRequests(ExecutionContext executionContext, IRestResponse response)
+        {
+            var privateApplicationContext = executionContext.ApplicationContext.Container.Resolve<IPrivateApplicationContext>();
+            var lockingScope = privateApplicationContext.CreateLockingScope();
+            var delay = TimeSpan.FromSeconds(1);
+
+            using (lockingScope.GetClusterWideExclusiveLockAsync($"{nameof(VatLayerExternalSearchProvider)}", TimeSpan.Zero).GetAwaiter().GetResult())
+            {
+                executionContext.Log.LogDebug($"Sleeping thread for {delay.TotalSeconds:0} seconds due to TooManyRequest response received");
+                Thread.Sleep(delay);
+            }
         }
 
         private void PopulateMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<VatLayerResponse> resultItem, IExternalSearchRequest request)
