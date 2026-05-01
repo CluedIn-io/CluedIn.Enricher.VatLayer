@@ -234,7 +234,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     vat = WebUtility.UrlEncode(vat);
                     var client = new RestClient("http://www.apilayer.net/api");
                     var request = new RestRequest($"validate?access_key={apiToken}&vat_number={vat}&format=1",
-                        Method.GET);
+                        Method.Get);
                     var response = client.ExecuteAsync<VatLayerResponse>(request).Result;
 
                     if (response.StatusCode == HttpStatusCode.OK)
@@ -407,14 +407,14 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
             var vat = WebUtility.UrlEncode("IE3539798LH");
             var client = new RestClient("http://www.apilayer.net/api");
-            var request = new RestRequest($"validate?access_key={jobData.ApiToken}&vat_number={vat}&format=1", Method.GET);
+            var request = new RestRequest($"validate?access_key={jobData.ApiToken}&vat_number={vat}&format=1", Method.Get);
 
             var response = client.ExecuteAsync<VatLayerResponse>(request).Result;
 
             return ConstructVerifyConnectionResponse(response);
         }
 
-        private ConnectionVerificationResult ConstructVerifyConnectionResponse(IRestResponse<VatLayerResponse> response)
+        private ConnectionVerificationResult ConstructVerifyConnectionResponse(RestResponse<VatLayerResponse> response)
         {
             var isSuccessResponse = response.IsSuccessful;
             var errorMessageBase = $"{Constants.ProviderName} returned \"{(int)response.StatusCode} {response.StatusDescription}\".";
@@ -461,7 +461,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             return metadata;
         }
 
-        internal static void WaitDueToTooManyRequests(ExecutionContext executionContext, IRestResponse response)
+        internal static void WaitDueToTooManyRequests(ExecutionContext executionContext, RestResponse response)
         {
             var privateApplicationContext = executionContext.ApplicationContext.Container.Resolve<IPrivateApplicationContext>();
             var lockingScope = privateApplicationContext.CreateLockingScope();
