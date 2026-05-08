@@ -7,7 +7,6 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using System;
 using System.Collections.Generic;
 using CluedIn.Core.Data;
 using CluedIn.Core.Data.Parts;
@@ -102,9 +101,12 @@ namespace ExternalSearch.VatLayer.Integration.Tests
             };
 
 
+            // Act
+            this.Setup(null, entityMetadata);
+
             // Assert
-            Assert.Throws<InvalidOperationException>(() => this.Setup(null, entityMetadata));
             this.testContext.ProcessingHub.Verify(h => h.SendCommand(It.IsAny<ProcessClueCommand>()), Times.Never);
+            Assert.Empty(this.clues);
         }
 
         [Fact]
