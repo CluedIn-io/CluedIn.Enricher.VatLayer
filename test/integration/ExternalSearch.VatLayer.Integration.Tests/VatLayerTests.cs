@@ -22,7 +22,7 @@ namespace ExternalSearch.VatLayer.Integration.Tests
     {
         private const string ApiToken = "118edd4591f3cf622af6e72e4eded7ea";
 
-        [Theory(Skip = "Failed Mock exception. GitHub Issue 829 - ref https://github.com/CluedIn-io/CluedIn/issues/829")]
+        [Theory]
         [InlineData("DK36548681")]
         public void TestValidVATNumber(string vatNumber)
         {
