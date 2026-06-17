@@ -332,7 +332,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             {
                 var resultItem = result.As<VatLayerResponse>();
                 var dirtyClue = request.CustomQueryInput.ToString();
-                var code = new EntityCode(request.EntityMetaData.OriginEntityCode.Type, "vatlayer", $"{query.QueryKey}{request.EntityMetaData.OriginEntityCode}".ToDeterministicGuid());
+                var code = new EntityCode(request.EntityMetaData.EntityType, "vatlayer", $"{query.QueryKey}{request.EntityMetaData.OriginEntityCode}".ToDeterministicGuid());
                 var clue = new Clue(code, context.Organization);
 
                 PopulateMetadata(clue.Data.EntityData, resultItem, request);
@@ -476,7 +476,8 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
         private void PopulateMetadata(IEntityMetadata metadata, IExternalSearchQueryResult<VatLayerResponse> resultItem, IExternalSearchRequest request)
         {
-            var code = new EntityCode(request.EntityMetaData.OriginEntityCode.Type, "vatlayer", $"{request.Queries.FirstOrDefault()?.QueryKey}{request.EntityMetaData.OriginEntityCode}".ToDeterministicGuid());
+            var queryKey = request.Queries.FirstOrDefault(x => x.Id == resultItem.QueryId)?.QueryKey ?? request.Queries.FirstOrDefault()?.QueryKey;
+            var code = new EntityCode(request.EntityMetaData.EntityType, "vatlayer", $"{queryKey}{request.EntityMetaData.OriginEntityCode}".ToDeterministicGuid());
 
             metadata.EntityType = request.EntityMetaData.EntityType;
             metadata.Name = request.EntityMetaData.Name;
