@@ -167,6 +167,37 @@ to `true` once fixed" guidance was premature; there were two independent bugs st
 
 ---
 
+## Step 9 — NullReferenceException root-caused and fixed; a third, narrower bug found
+
+Status: **Second bug fixed and confirmed (4/5 tests now pass); a third bug found, out of scope**
+
+Investigated in a background fork (decompiled the actual consumed `CluedIn.ExternalSearch`
+`5.0.0-beta.576` DLL directly, not just monorepo source). **The NullReferenceException in Step 8 was
+itself a masking exception, not the real bug:** `ExternalSearchEngine.BuildQueriesAsync` wraps its
+per-provider query-building call in try/catch. The catch handler tries to log the real, original
+exception via a `DataSetLogsMessageCommand` that does
+`request.EntityMetaData.OriginEntityCode.ToString() ?? string.Empty` — unguarded. If
+`OriginEntityCode` is `null`, logging the real error throws a *second* NullReferenceException, and
+that second one is what actually propagates and is what we were seeing. None of `VatLayerTests.cs`'s
+5 tests set `OriginEntityCode`; compared against `CluedIn.Enricher.Brreg` (same `BaseExternalSearchTest<T>`
+harness, confirmed-passing in this same migration effort) — every test there that expects real
+search activity sets it as a matter of convention.
+
+Added `OriginEntityCode = new EntityCode(EntityType.Organization, "vatlayer", <value>)` to all 5
+tests, matching that convention. Verified locally: **4 of 5 tests now pass** (was 0 of 5).
+
+The remaining failure, `TestValidVATNumber`, is a **third, different, genuine bug** — confirmed it's
+not a dead API token (the hardcoded key still returns real, valid data when queried directly against
+`apilayer.net`) and confirmed it's not version-specific (fails identically on net6.0 and net10.0). So
+`VatLayerExternalSearchProvider` gets a real, valid API response back but doesn't produce a clue from
+it — a bug in the provider's own clue-building logic, unrelated to version targeting or
+infrastructure. Not investigated further — out of scope for a build-tooling migration, needs its own
+dedicated look.
+
+`runIntegrationTests` stays `false` (1 test still genuinely fails) until that third bug is fixed.
+
+---
+
 ## Checklist
 
 - [x] `azure-pipelines.yml` — switched to `crawler.build.jobs.yml` with `multiVersionCluedInTargets` (4.7.0, 4.8.0, 5.0.0-beta.*); pool switched to `ubuntu-22.04`; `useGitVersionDotNetTool: true` + publish parameters added after first CI failure
@@ -179,4 +210,5 @@ to `true` once fixed" guidance was premature; there were two independent bugs st
 - [x] Built clean (0 errors) for all three legs across every project (`src/` + both test projects); real `dotnet test` verified 127/127 passing on net6.0 and net10.0
 - [x] Pushed branch and confirmed the Azure DevOps pipeline is green end-to-end — PR #61, build 152030: all three legs + `Multi-version: publish` passed; verified the actual published packages on the feed
 - [x] Constructor bug fixed (made public) and confirmed in real CI — the specific Castle DynamicProxy error is gone
-- [ ] Integration tests — a second, deeper bug remains (`NullReferenceException` inside the published `CluedIn.ExternalSearch` package's `ExternalSearchEngine.BuildQueriesAsync`), confirmed in real CI (build 152047), not fixable from this repo; `runIntegrationTests` left at `false`; needs someone with `CluedIn.ExternalSearch`/`CluedIn.Testing.Base` source access
+- [x] Integration tests — root-caused and fixed the NullReferenceException (it was a masking exception from unset `OriginEntityCode`, not the real bug); 4/5 tests now pass
+- [ ] `TestValidVATNumber` still fails — a third, narrower, genuine bug in `VatLayerExternalSearchProvider`'s own clue-building logic (confirmed not a dead API token, confirmed not version-specific); `runIntegrationTests` left at `false` until fixed
