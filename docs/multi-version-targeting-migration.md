@@ -125,8 +125,12 @@ DynamicProxy (e.g. `protected`/`internal` with `InternalsVisibleTo`, or public),
 tests to not require proxying the concrete class. Once fixed, flip `runIntegrationTests`'s default
 back to `true`.
 
-**Re-ran CI (build 152028) — fully green** with integration tests left off:
-all three `Multi-version build+test` legs and `Multi-version: publish` passed.
+**Re-ran CI (build 152030) — fully green** with integration tests left off:
+all three `Multi-version build+test` legs and `Multi-version: publish` passed. Verified actual
+publish output on the feed, not just green CI: both packable projects in `src/` —
+`CluedIn.ExternalSearch.Providers.VatLayer.470`/`.480`/`.500` and
+`CluedIn.Provider.ExternalSearch.Providers.VatLayer.470`/`.480`/`.500` — all six show fresh
+publish timestamps from this build.
 
 ---
 
@@ -141,4 +145,4 @@ all three `Multi-version build+test` legs and `Multi-version: publish` passed.
 - [x] `GitVersion.yml` — `next-version: 1.0`; `commits-before` merged into the existing `ignore:` block; verified `MajorMinorPatch: 1.0.0` with the pinned GitVersion.Tool 5.9.0
 - [x] Built clean (0 errors) for all three legs across every project (`src/` + both test projects); real `dotnet test` verified 127/127 passing on net6.0 and net10.0
 - [x] Integration tests — found a genuine pre-existing Castle DynamicProxy/private-constructor bug, unrelated to version targeting; `runIntegrationTests` defaulted to `false` (matching the old pipeline's real behaviour) rather than guessing a fix; documented as a follow-up for the repo owner
-- [x] Pushed branch and confirmed the Azure DevOps pipeline is green end-to-end — PR #61, build 152028: all three legs + `Multi-version: publish` passed
+- [x] Pushed branch and confirmed the Azure DevOps pipeline is green end-to-end — PR #61, build 152030: all three legs + `Multi-version: publish` passed; verified the actual published packages on the feed
