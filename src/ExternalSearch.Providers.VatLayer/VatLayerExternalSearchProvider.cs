@@ -54,38 +54,35 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         {
             var nameBasedTokenProvider = new NameBasedTokenProvider("VatLayer");
 
-            if (nameBasedTokenProvider.ApiToken != null)
+            if (!string.IsNullOrWhiteSpace(nameBasedTokenProvider.ApiToken))
             {
                 TokenProvider = new RoundRobinTokenProvider(
                     nameBasedTokenProvider.ApiToken.Split(',', ';'));
             }
         }
 
-        // These three were private, which meant Castle DynamicProxy (used by Moq's Mock<T>(args) to
-        // build a class proxy) couldn't generate a subclass calling them - a base constructor a
-        // proxy subclass can't reach isn't invokable from generated code, regardless of what args
-        // are supplied. That broke every integration test exercising a specific token set (Moq
-        // matches the constructor by the args passed to Mock<T>(...), which here is an
-        // IEnumerable<string>). Made public - they exist specifically to support this kind of
-        // dependency injection/test construction, so keeping them private defeated their own
-        // purpose.
-        public VatLayerExternalSearchProvider(IEnumerable<string> tokens)
+        // These constructors are protected so Castle DynamicProxy can invoke them for tests without
+        // Castle Windsor considering them during production component activation.
+        protected VatLayerExternalSearchProvider(IEnumerable<string> tokens)
             : this(true)
         {
             TokenProvider = new RoundRobinTokenProvider(tokens);
         }
 
-        public VatLayerExternalSearchProvider(IExternalSearchTokenProvider tokenProvider)
+        protected VatLayerExternalSearchProvider(IExternalSearchTokenProvider tokenProvider)
             : this(true)
         {
             TokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
         }
 
-        public VatLayerExternalSearchProvider(bool tokenProviderIsRequired)
+        protected VatLayerExternalSearchProvider(bool tokenProviderIsRequired)
             : this()
         {
             TokenProviderIsRequired = tokenProviderIsRequired;
         }
+
+        public static VatLayerExternalSearchProvider CreateWithTokens(IEnumerable<string> tokens)
+            => new VatLayerExternalSearchProvider(tokens);
 
         /**********************************************************************************************************
          * METHODS
