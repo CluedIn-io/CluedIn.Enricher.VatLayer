@@ -37,6 +37,14 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
         private static readonly EntityType[] DefaultAcceptedEntityTypes = { EntityType.Organization };
 
+        // RestSharp 106.x (CluedIn 4.7/4.8) uses the uppercase Method.GET enum member; RestSharp
+        // 114.x (CluedIn 5.0+) renamed it to PascalCase Method.Get.
+#if CLUEDIN_V50
+        private const Method HttpGetMethod = Method.Get;
+#else
+        private const Method HttpGetMethod = Method.GET;
+#endif
+
         /**********************************************************************************************************
         * CONSTRUCTORS
         **********************************************************************************************************/
@@ -234,7 +242,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     vat = WebUtility.UrlEncode(vat);
                     var client = new RestClient("http://www.apilayer.net/api");
                     var request = new RestRequest($"validate?access_key={apiToken}&vat_number={vat}&format=1",
-                        Method.Get);
+                        HttpGetMethod);
                     var response = client.ExecuteAsync<VatLayerResponse>(request).Result;
 
                     if (response.StatusCode == HttpStatusCode.OK)
@@ -407,14 +415,21 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
             var vat = WebUtility.UrlEncode("IE3539798LH");
             var client = new RestClient("http://www.apilayer.net/api");
-            var request = new RestRequest($"validate?access_key={jobData.ApiToken}&vat_number={vat}&format=1", Method.Get);
+            var request = new RestRequest($"validate?access_key={jobData.ApiToken}&vat_number={vat}&format=1", HttpGetMethod);
 
             var response = client.ExecuteAsync<VatLayerResponse>(request).Result;
 
             return ConstructVerifyConnectionResponse(response);
         }
 
-        private ConnectionVerificationResult ConstructVerifyConnectionResponse(RestResponse<VatLayerResponse> response)
+        // RestSharp 106.x (CluedIn 4.7/4.8) returns IRestResponse<T> from ExecuteAsync<T>; RestSharp
+        // 114.x (CluedIn 5.0+) returns the concrete RestResponse<T> directly.
+        private ConnectionVerificationResult ConstructVerifyConnectionResponse(
+#if CLUEDIN_V50
+            RestResponse<VatLayerResponse> response)
+#else
+            IRestResponse<VatLayerResponse> response)
+#endif
         {
             var isSuccessResponse = response.IsSuccessful;
             var errorMessageBase = $"{Constants.ProviderName} returned \"{(int)response.StatusCode} {response.StatusDescription}\".";
@@ -461,7 +476,12 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             return metadata;
         }
 
-        internal static void WaitDueToTooManyRequests(ExecutionContext executionContext, RestResponse response)
+        internal static void WaitDueToTooManyRequests(ExecutionContext executionContext,
+#if CLUEDIN_V50
+            RestResponse response)
+#else
+            IRestResponse response)
+#endif
         {
             var privateApplicationContext = executionContext.ApplicationContext.Container.Resolve<IPrivateApplicationContext>();
             var lockingScope = privateApplicationContext.CreateLockingScope();
