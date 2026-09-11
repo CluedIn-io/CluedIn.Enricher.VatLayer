@@ -59,7 +59,7 @@ namespace ExternalSearch.VatLayer.Integration.Tests
             };
 
             var context = new TestContext().Context;
-            var provider = new VatLayerExternalSearchProvider(new List<string> { ApiToken });
+            var provider = VatLayerExternalSearchProvider.CreateWithTokens(new List<string> { ApiToken });
             var config = new Dictionary<string, object> { { Constants.KeyName.ApiToken, ApiToken } };
             var request = new TestExternalSearchRequest
             {
