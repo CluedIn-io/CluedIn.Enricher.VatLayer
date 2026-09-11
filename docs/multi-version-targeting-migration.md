@@ -134,6 +134,39 @@ publish timestamps from this build.
 
 ---
 
+## Step 8 — Constructor fix applied; surfaced a second, deeper bug (still open)
+
+Status: **Constructor bug fixed and confirmed; a separate bug remains, out of scope to fix here**
+
+With explicit sign-off, made `VatLayerExternalSearchProvider`'s three token-taking constructors
+`public` (they were `private`, which is what Castle DynamicProxy couldn't call — see Step 7). This
+genuinely fixes that specific bug: the `"Constructor on type '...Proxy' not found"` error is gone.
+
+Re-enabling `runIntegrationTests` to verify surfaced a **second, previously-masked bug**: every one
+of the 5 integration tests now fails identically with
+
+```
+System.NullReferenceException : Object reference not set to an instance of an object.
+   at CluedIn.ExternalSearch.Engine.ExternalSearchEngine.BuildQueriesAsync(...)
+   at CluedIn.ExternalSearch.Engine.ExternalSearchEngine.ExecuteAsync[TResult](...)
+   at CluedIn.Processing.Actors.ExternalSearchProcessing.ProcessWorkflowStepAsync(...)
+   at CluedIn.Testing.Base.ExternalSearch.BaseExternalSearchTest`1.Setup(...)
+```
+
+This is compiled code inside the published `CluedIn.ExternalSearch` package
+(`ExternalSearchEngine.BuildQueriesAsync`), not this repo's own source — not something fixable from
+this migration. It reproduces identically in real CI (build 152047), not just locally, so it isn't a
+local-environment artifact. Every test fails the same way, including the simplest case
+(`TestMissingApiToken`), which points to something structural rather than test-data-specific, but
+diagnosing further needs someone with source access to `CluedIn.ExternalSearch`/
+`CluedIn.Testing.Base` — out of scope for this pass.
+
+`runIntegrationTests` reverted back to `false`. The constructor fix stays (it's real, correct
+progress, and unblocks this from being the *only* problem) — the tracking doc's earlier "flip back
+to `true` once fixed" guidance was premature; there were two independent bugs stacked here, not one.
+
+---
+
 ## Checklist
 
 - [x] `azure-pipelines.yml` — switched to `crawler.build.jobs.yml` with `multiVersionCluedInTargets` (4.7.0, 4.8.0, 5.0.0-beta.*); pool switched to `ubuntu-22.04`; `useGitVersionDotNetTool: true` + publish parameters added after first CI failure
@@ -144,5 +177,6 @@ publish timestamps from this build.
 - [x] Source — `#if CLUEDIN_V50` guards for the RestSharp 106↔114 API break (4 call sites in `VatLayerExternalSearchProvider.cs`)
 - [x] `GitVersion.yml` — `next-version: 1.0`; `commits-before` merged into the existing `ignore:` block; verified `MajorMinorPatch: 1.0.0` with the pinned GitVersion.Tool 5.9.0
 - [x] Built clean (0 errors) for all three legs across every project (`src/` + both test projects); real `dotnet test` verified 127/127 passing on net6.0 and net10.0
-- [x] Integration tests — found a genuine pre-existing Castle DynamicProxy/private-constructor bug, unrelated to version targeting; `runIntegrationTests` defaulted to `false` (matching the old pipeline's real behaviour) rather than guessing a fix; documented as a follow-up for the repo owner
 - [x] Pushed branch and confirmed the Azure DevOps pipeline is green end-to-end — PR #61, build 152030: all three legs + `Multi-version: publish` passed; verified the actual published packages on the feed
+- [x] Constructor bug fixed (made public) and confirmed in real CI — the specific Castle DynamicProxy error is gone
+- [ ] Integration tests — a second, deeper bug remains (`NullReferenceException` inside the published `CluedIn.ExternalSearch` package's `ExternalSearchEngine.BuildQueriesAsync`), confirmed in real CI (build 152047), not fixable from this repo; `runIntegrationTests` left at `false`; needs someone with `CluedIn.ExternalSearch`/`CluedIn.Testing.Base` source access
