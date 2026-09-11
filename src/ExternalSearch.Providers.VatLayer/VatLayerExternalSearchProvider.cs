@@ -37,6 +37,14 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
         private static readonly EntityType[] DefaultAcceptedEntityTypes = { EntityType.Organization };
 
+        // RestSharp 106.x (CluedIn 4.7/4.8) uses the uppercase Method.GET enum member; RestSharp
+        // 114.x (CluedIn 5.0+) renamed it to PascalCase Method.Get.
+#if CLUEDIN_V50
+        private const Method HttpGetMethod = Method.Get;
+#else
+        private const Method HttpGetMethod = Method.GET;
+#endif
+
         /**********************************************************************************************************
         * CONSTRUCTORS
         **********************************************************************************************************/
@@ -53,19 +61,27 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             }
         }
 
-        private VatLayerExternalSearchProvider(IEnumerable<string> tokens)
+        // These three were private, which meant Castle DynamicProxy (used by Moq's Mock<T>(args) to
+        // build a class proxy) couldn't generate a subclass calling them - a base constructor a
+        // proxy subclass can't reach isn't invokable from generated code, regardless of what args
+        // are supplied. That broke every integration test exercising a specific token set (Moq
+        // matches the constructor by the args passed to Mock<T>(...), which here is an
+        // IEnumerable<string>). Made public - they exist specifically to support this kind of
+        // dependency injection/test construction, so keeping them private defeated their own
+        // purpose.
+        public VatLayerExternalSearchProvider(IEnumerable<string> tokens)
             : this(true)
         {
             TokenProvider = new RoundRobinTokenProvider(tokens);
         }
 
-        private VatLayerExternalSearchProvider(IExternalSearchTokenProvider tokenProvider)
+        public VatLayerExternalSearchProvider(IExternalSearchTokenProvider tokenProvider)
             : this(true)
         {
             TokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
         }
 
-        private VatLayerExternalSearchProvider(bool tokenProviderIsRequired)
+        public VatLayerExternalSearchProvider(bool tokenProviderIsRequired)
             : this()
         {
             TokenProviderIsRequired = tokenProviderIsRequired;
@@ -234,7 +250,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     vat = WebUtility.UrlEncode(vat);
                     var client = new RestClient("http://www.apilayer.net/api");
                     var request = new RestRequest($"validate?access_key={apiToken}&vat_number={vat}&format=1",
-                        Method.Get);
+                        HttpGetMethod);
                     var response = client.ExecuteAsync<VatLayerResponse>(request).Result;
 
                     if (response.StatusCode == HttpStatusCode.OK)
@@ -407,14 +423,21 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
             var vat = WebUtility.UrlEncode("IE3539798LH");
             var client = new RestClient("http://www.apilayer.net/api");
-            var request = new RestRequest($"validate?access_key={jobData.ApiToken}&vat_number={vat}&format=1", Method.Get);
+            var request = new RestRequest($"validate?access_key={jobData.ApiToken}&vat_number={vat}&format=1", HttpGetMethod);
 
             var response = client.ExecuteAsync<VatLayerResponse>(request).Result;
 
             return ConstructVerifyConnectionResponse(response);
         }
 
-        private ConnectionVerificationResult ConstructVerifyConnectionResponse(RestResponse<VatLayerResponse> response)
+        // RestSharp 106.x (CluedIn 4.7/4.8) returns IRestResponse<T> from ExecuteAsync<T>; RestSharp
+        // 114.x (CluedIn 5.0+) returns the concrete RestResponse<T> directly.
+        private ConnectionVerificationResult ConstructVerifyConnectionResponse(
+#if CLUEDIN_V50
+            RestResponse<VatLayerResponse> response)
+#else
+            IRestResponse<VatLayerResponse> response)
+#endif
         {
             var isSuccessResponse = response.IsSuccessful;
             var errorMessageBase = $"{Constants.ProviderName} returned \"{(int)response.StatusCode} {response.StatusDescription}\".";
@@ -461,7 +484,12 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             return metadata;
         }
 
-        internal static void WaitDueToTooManyRequests(ExecutionContext executionContext, RestResponse response)
+        internal static void WaitDueToTooManyRequests(ExecutionContext executionContext,
+#if CLUEDIN_V50
+            RestResponse response)
+#else
+            IRestResponse response)
+#endif
         {
             var privateApplicationContext = executionContext.ApplicationContext.Container.Resolve<IPrivateApplicationContext>();
             var lockingScope = privateApplicationContext.CreateLockingScope();
