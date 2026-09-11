@@ -31,6 +31,7 @@ namespace ExternalSearch.VatLayer.Integration.Tests
             properties.Properties.Add(CluedIn.Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber, vatNumber);
             IEntityMetadata entityMetadata = new EntityMetadataPart() {
                 EntityType = EntityType.Organization,
+                OriginEntityCode = new EntityCode(EntityType.Organization, "vatlayer", vatNumber),
                 Properties = properties.Properties
             };
 
@@ -54,6 +55,7 @@ namespace ExternalSearch.VatLayer.Integration.Tests
             properties.Properties.Add(CluedIn.Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber, vatNumber);
             IEntityMetadata entityMetadata = new EntityMetadataPart() {
                 EntityType = EntityType.Organization,
+                OriginEntityCode = new EntityCode(EntityType.Organization, "vatlayer", vatNumber),
                 Properties = properties.Properties
             };
 
@@ -76,6 +78,7 @@ namespace ExternalSearch.VatLayer.Integration.Tests
             properties.Properties.Add(CluedIn.Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber, vatNumber);
             IEntityMetadata entityMetadata = new EntityMetadataPart() {
                 EntityType = EntityType.Organization,
+                OriginEntityCode = new EntityCode(EntityType.Organization, "vatlayer", vatNumber),
                 Properties = properties.Properties
             };
 
@@ -97,6 +100,7 @@ namespace ExternalSearch.VatLayer.Integration.Tests
             properties.Properties.Add(CluedIn.Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber, "asdasd");
             IEntityMetadata entityMetadata = new EntityMetadataPart() {
                 EntityType = EntityType.Organization,
+                OriginEntityCode = new EntityCode(EntityType.Organization, "vatlayer", "asdasd"),
                 Properties = properties.Properties
             };
 
@@ -117,6 +121,7 @@ namespace ExternalSearch.VatLayer.Integration.Tests
             properties.Properties.Add(CluedIn.Core.Data.Vocabularies.Vocabularies.CluedInOrganization.VatNumber, "DK12345");
             IEntityMetadata entityMetadata = new EntityMetadataPart() {
                 EntityType = EntityType.Organization,
+                OriginEntityCode = new EntityCode(EntityType.Organization, "vatlayer", "DK12345"),
                 Properties = properties.Properties
             };
 
