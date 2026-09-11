@@ -61,6 +61,11 @@ jobs:
     parameters:
       pool:
         vmImage: 'ubuntu-22.04'
+      githubReleaseInMaster: true
+      publicReleaseForMaster: true
+      publishCodeCoverage: true
+      useGitVersionDotNetTool: true
+      publishToDevFeed: true
       probeCluedInVersion: ${{ parameters.probeCluedInVersion }}
       executeIntegrationTests: ${{ parameters.runIntegrationTests }}
       multiVersionCluedInTargets:
