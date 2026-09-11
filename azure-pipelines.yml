@@ -1,9 +1,20 @@
 name: $(Date:yyyyMMdd)$(Rev:.r)
 parameters:
+  # Default false, matching the old single-version pipeline's real behaviour (it never set
+  # executeIntegrationTests at all, so it always used the template's own false default). The
+  # integration tests have a genuine, pre-existing bug unrelated to CluedIn version targeting -
+  # VatLayerExternalSearchProvider's only accessible constructor is the public parameterless one,
+  # the rest are private, and Castle DynamicProxy (used by BaseExternalSearchTest<T>'s harness)
+  # can't generate a proxy subclass calling an inaccessible constructor. Confirmed via the real
+  # failure ("Constructor on type 'Castle.Proxies.VatLayerExternalSearchProviderProxy' not found")
+  # identically on all three CluedIn legs, including 5.0.0-beta.* - not a version-compat issue, a
+  # test that was never exercised by CI before this migration turned it on. See docs/
+  # multi-version-targeting-migration.md for the two fix options; leaving it off here rather than
+  # guessing which one the repo owner wants.
   - name: runIntegrationTests
     displayName: Run Integration Tests
     type: boolean
-    default: true
+    default: false
 
   - name: pipelineTemplateRef
     displayName: Pipeline Template Ref

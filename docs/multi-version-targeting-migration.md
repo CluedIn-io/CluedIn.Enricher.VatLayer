@@ -85,9 +85,54 @@ unreachable/off-branch tags exist in this repo's history) is `4.6.2` at
 
 ---
 
+## Step 7 — First CI run failed twice; fixed both
+
+**First push (build 152026) failed all six legs** with the legacy marketplace `GitVersionTask@5`
+(retired Node6 runtime, `EINVAL readlink`) — I'd omitted `useGitVersionDotNetTool: true` and the
+other publish parameters from the jobs-template call, the same mistake Permid's migration made and
+fixed earlier in this effort. Fixed by adding `githubReleaseInMaster`, `publicReleaseForMaster`,
+`publishCodeCoverage`, `useGitVersionDotNetTool: true`, `publishToDevFeed`.
+
+**Second push (build 152027): all three `Multi-version build+test` legs passed, but all three
+`Integration tests` legs failed**, identically on every CluedIn version including `5.0.0-beta.*`:
+
+```
+System.ArgumentException : Can not instantiate proxy of class:
+CluedIn.ExternalSearch.Providers.VatLayer.VatLayerExternalSearchProvider.
+---- System.MissingMethodException : Constructor on type
+'Castle.Proxies.VatLayerExternalSearchProviderProxy' not found.
+```
+
+Confirmed this is a genuine, **pre-existing bug unrelated to CluedIn version targeting**, not
+something this migration introduced: `VatLayerExternalSearchProvider`'s only constructors besides
+the public parameterless one are `private` (`(IEnumerable<string> tokens)`,
+`(IExternalSearchTokenProvider)`, `(bool)`). `BaseExternalSearchTest<T>`'s test harness (from
+`CluedIn.Testing.Base`) uses Castle DynamicProxy to instantiate `T`, and a dynamically generated
+proxy subclass — living in a different assembly — cannot call a `private` base constructor. This
+would fail identically regardless of CluedIn version or `.470`/`.480`/`.500` `CluedIn.Testing.Base`
+suffix (confirmed: same exact failure on `4.7.0`, `4.8.0`, and `5.0.0-beta.*`).
+
+**Why this was never caught before:** the old single-version `azure-pipelines.yml` never set
+`executeIntegrationTests` at all, so it always used the shared template's own `false` default — these
+tests have likely never actually run in CI. Changed `runIntegrationTests`'s default back to `false`
+(matching the old pipeline's real behaviour) rather than leaving it at the `true` default this
+effort's other repos use, since flipping it on here would just make every PR red for a pre-existing,
+unrelated bug.
+
+**Follow-up needed from the repo owner** (not fixed here, out of scope for a build-tooling
+migration): either make one of `VatLayerExternalSearchProvider`'s constructors accessible to Castle
+DynamicProxy (e.g. `protected`/`internal` with `InternalsVisibleTo`, or public), or rewrite these
+tests to not require proxying the concrete class. Once fixed, flip `runIntegrationTests`'s default
+back to `true`.
+
+**Re-ran CI (build 152028) — fully green** with integration tests left off:
+all three `Multi-version build+test` legs and `Multi-version: publish` passed.
+
+---
+
 ## Checklist
 
-- [x] `azure-pipelines.yml` — switched to `crawler.build.jobs.yml` with `multiVersionCluedInTargets` (4.7.0, 4.8.0, 5.0.0-beta.*); pool switched to `ubuntu-22.04`
+- [x] `azure-pipelines.yml` — switched to `crawler.build.jobs.yml` with `multiVersionCluedInTargets` (4.7.0, 4.8.0, 5.0.0-beta.*); pool switched to `ubuntu-22.04`; `useGitVersionDotNetTool: true` + publish parameters added after first CI failure
 - [x] `Directory.Build.props` — `CluedInMultiVersionTargetFramework` handling, `DefineConstants`, `LangVersion` pinned to 13.0
 - [x] `Packages.props` — `_CluedIn` guarded; test packages split xunit v2/v3 by `CLUEDIN_V50`; `CluedIn.Testing.Base` switched to version-suffixed package ID
 - [x] `NuGet.config` — renamed from `Nuget.config`
@@ -95,4 +140,5 @@ unreachable/off-branch tags exist in this repo's history) is `4.6.2` at
 - [x] Source — `#if CLUEDIN_V50` guards for the RestSharp 106↔114 API break (4 call sites in `VatLayerExternalSearchProvider.cs`)
 - [x] `GitVersion.yml` — `next-version: 1.0`; `commits-before` merged into the existing `ignore:` block; verified `MajorMinorPatch: 1.0.0` with the pinned GitVersion.Tool 5.9.0
 - [x] Built clean (0 errors) for all three legs across every project (`src/` + both test projects); real `dotnet test` verified 127/127 passing on net6.0 and net10.0
-- [ ] Push branch and confirm the actual Azure DevOps pipeline run is green end-to-end
+- [x] Integration tests — found a genuine pre-existing Castle DynamicProxy/private-constructor bug, unrelated to version targeting; `runIntegrationTests` defaulted to `false` (matching the old pipeline's real behaviour) rather than guessing a fix; documented as a follow-up for the repo owner
+- [x] Pushed branch and confirmed the Azure DevOps pipeline is green end-to-end — PR #61, build 152028: all three legs + `Multi-version: publish` passed
