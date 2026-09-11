@@ -61,19 +61,27 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             }
         }
 
-        private VatLayerExternalSearchProvider(IEnumerable<string> tokens)
+        // These three were private, which meant Castle DynamicProxy (used by Moq's Mock<T>(args) to
+        // build a class proxy) couldn't generate a subclass calling them - a base constructor a
+        // proxy subclass can't reach isn't invokable from generated code, regardless of what args
+        // are supplied. That broke every integration test exercising a specific token set (Moq
+        // matches the constructor by the args passed to Mock<T>(...), which here is an
+        // IEnumerable<string>). Made public - they exist specifically to support this kind of
+        // dependency injection/test construction, so keeping them private defeated their own
+        // purpose.
+        public VatLayerExternalSearchProvider(IEnumerable<string> tokens)
             : this(true)
         {
             TokenProvider = new RoundRobinTokenProvider(tokens);
         }
 
-        private VatLayerExternalSearchProvider(IExternalSearchTokenProvider tokenProvider)
+        public VatLayerExternalSearchProvider(IExternalSearchTokenProvider tokenProvider)
             : this(true)
         {
             TokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
         }
 
-        private VatLayerExternalSearchProvider(bool tokenProviderIsRequired)
+        public VatLayerExternalSearchProvider(bool tokenProviderIsRequired)
             : this()
         {
             TokenProviderIsRequired = tokenProviderIsRequired;
