@@ -248,18 +248,21 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     var client = new RestClient("http://www.apilayer.net/api");
                     var request = new RestRequest($"validate?access_key={apiToken}&vat_number={vat}&format=1",
                         HttpGetMethod);
-                    var response = client.ExecuteAsync<VatLayerResponse>(request).Result;
+                    var response = client.ExecuteAsync(request).Result;
+var responseData = string.IsNullOrWhiteSpace(response?.Content)
+    ? null
+    : JsonConvert.DeserializeObject<VatLayerResponse>(response.Content);
 
                     if (response.StatusCode == HttpStatusCode.OK)
                     {
-                        if (response.Data != null && response.Data.Valid)
+                        if (responseData != null && responseData.Valid)
                         {
                             var diagnostic =
-                                $"External search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' produced results, CompanyName: '{response.Data.CompanyName}'  VatNumber: '{response.Data.VatNumber}'";
+                                $"External search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' produced results, CompanyName: '{responseData.CompanyName}'  VatNumber: '{responseData.VatNumber}'";
 
                             context.Log.LogInformation(diagnostic);
 
-                            yield return new ExternalSearchQueryResult<VatLayerResponse>(query, response.Data);
+                            yield return new ExternalSearchQueryResult<VatLayerResponse>(query, responseData);
                         }
                         else
                         {
@@ -422,18 +425,18 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             var client = new RestClient("http://www.apilayer.net/api");
             var request = new RestRequest($"validate?access_key={jobData.ApiToken}&vat_number={vat}&format=1", HttpGetMethod);
 
-            var response = client.ExecuteAsync<VatLayerResponse>(request).Result;
+            var response = client.ExecuteAsync(request).Result;
 
             return ConstructVerifyConnectionResponse(response);
         }
 
-        // RestSharp 106.x (CluedIn 4.7/4.8) returns IRestResponse<T> from ExecuteAsync<T>; RestSharp
-        // 114.x (CluedIn 5.0+) returns the concrete RestResponse<T> directly.
+        // RestSharp 106.x (CluedIn 4.7/4.8) returns IRestResponse; RestSharp 114.x
+        // (CluedIn 5.0+) returns the concrete RestResponse directly.
         private ConnectionVerificationResult ConstructVerifyConnectionResponse(
 #if CLUEDIN_V50
-            RestResponse<VatLayerResponse> response)
+            RestResponse response)
 #else
-            IRestResponse<VatLayerResponse> response)
+            IRestResponse response)
 #endif
         {
             var isSuccessResponse = response.IsSuccessful;
@@ -443,7 +446,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 return new ConnectionVerificationResult(false, $"{errorMessageBase} {(!string.IsNullOrWhiteSpace(response.ErrorException.Message) ? response.ErrorException.Message : "This could be due to breaking changes in the external system")}.");
             }
 
-            var responseData = response.Data;
+            var responseData = JsonConvert.DeserializeObject<VatLayerResponse>(response.Content);
             if (responseData?.Valid != true)
             {
                 try
