@@ -264,3 +264,23 @@ real coverage, but converting them is a separate, mechanical follow-up rather th
 - [x] Root-caused why `TestValidVATNumber` still failed — the shared engine never invokes `IConfigurableExternalSearchProvider`'s methods at all (confirmed zero calls via debug probes, on every test including the "passing" ones — those provided no real coverage)
 - [x] Rewrote `TestValidVATNumber` to bypass the broken engine path and drive the provider's own `BuildQueries`/`ExecuteSearch`/`BuildClues` pipeline directly — all 5 tests now genuinely pass (verified with a real HTTP round-trip, confirmed not another silent pass) on both legs locally
 - [x] `runIntegrationTests` re-enabled (`default: true`)
+
+---
+
+## Addendum — version baseline moved from 1.0.0 to 100.0.0
+
+Status: **Done**
+
+The CluedIn version is now carried entirely by the package suffix (`.470`/`.480`/`.500`), not by
+this repo's own `next-version` number, so that number moved again, from `1.0` to `100.0`. Reason:
+repos that were previously at 4.x/5.x under the old single-version-targeting scheme would appear to
+"go backwards" if their next version showed as `1.0.0` — `100.0.0` is unambiguously higher than any
+prior single-version release number this repo ever had.
+
+Unlike the original `1.0` reset, no `commits-before`/`ignore` trick is needed this time:
+`next-version` only needs help overriding an existing tag when the configured value is *lower* than
+that tag, and `100.0` is already higher than every pre-existing tag here. Removed the
+`ignore.commits-before` line entirely (kept `ignore.sha: []`).
+
+Verified with a real local `dotnet-gitversion` run: `MajorMinorPatch` resolves to `"100.0.0"`.
+`docs/1.0.0-release-notes.md` renamed to `docs/100.0.0-release-notes.md`.
