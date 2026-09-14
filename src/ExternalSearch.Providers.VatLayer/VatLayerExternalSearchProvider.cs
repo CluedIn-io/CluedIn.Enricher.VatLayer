@@ -252,7 +252,9 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     var request = new RestRequest($"validate?access_key={apiToken}&vat_number={vat}&format=1",
                         HttpGetMethod);
                     var response = client.ExecuteAsync(request).Result;
-                    var responseData = JsonConvert.DeserializeObject<VatLayerResponse>(response.Content);
+var responseData = string.IsNullOrWhiteSpace(response?.Content)
+    ? null
+    : JsonConvert.DeserializeObject<VatLayerResponse>(response.Content);
 
                     if (response.StatusCode == HttpStatusCode.OK)
                     {
