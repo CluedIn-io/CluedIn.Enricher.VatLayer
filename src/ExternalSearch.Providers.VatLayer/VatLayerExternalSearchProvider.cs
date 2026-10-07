@@ -37,6 +37,14 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
         private static readonly EntityType[] DefaultAcceptedEntityTypes = { EntityType.Organization };
 
+        // RestSharp 106.x (CluedIn 4.7/4.8) uses the uppercase Method.GET enum member; RestSharp
+        // 114.x (CluedIn 5.0+) renamed it to PascalCase Method.Get.
+#if CLUEDIN_V50
+        private const Method HttpGetMethod = Method.Get;
+#else
+        private const Method HttpGetMethod = Method.GET;
+#endif
+
         /**********************************************************************************************************
         * CONSTRUCTORS
         **********************************************************************************************************/
@@ -46,30 +54,35 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
         {
             var nameBasedTokenProvider = new NameBasedTokenProvider("VatLayer");
 
-            if (nameBasedTokenProvider.ApiToken != null)
+            if (!string.IsNullOrWhiteSpace(nameBasedTokenProvider.ApiToken))
             {
                 TokenProvider = new RoundRobinTokenProvider(
                     nameBasedTokenProvider.ApiToken.Split(',', ';'));
             }
         }
 
-        private VatLayerExternalSearchProvider(IEnumerable<string> tokens)
+        // These constructors are protected so Castle DynamicProxy can invoke them for tests without
+        // Castle Windsor considering them during production component activation.
+        protected VatLayerExternalSearchProvider(IEnumerable<string> tokens)
             : this(true)
         {
             TokenProvider = new RoundRobinTokenProvider(tokens);
         }
 
-        private VatLayerExternalSearchProvider(IExternalSearchTokenProvider tokenProvider)
+        protected VatLayerExternalSearchProvider(IExternalSearchTokenProvider tokenProvider)
             : this(true)
         {
             TokenProvider = tokenProvider ?? throw new ArgumentNullException(nameof(tokenProvider));
         }
 
-        private VatLayerExternalSearchProvider(bool tokenProviderIsRequired)
+        protected VatLayerExternalSearchProvider(bool tokenProviderIsRequired)
             : this()
         {
             TokenProviderIsRequired = tokenProviderIsRequired;
         }
+
+        public static VatLayerExternalSearchProvider CreateWithTokens(IEnumerable<string> tokens)
+            => new VatLayerExternalSearchProvider(tokens);
 
         /**********************************************************************************************************
          * METHODS
@@ -234,19 +247,22 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                     vat = WebUtility.UrlEncode(vat);
                     var client = new RestClient("http://www.apilayer.net/api");
                     var request = new RestRequest($"validate?access_key={apiToken}&vat_number={vat}&format=1",
-                        Method.GET);
-                    var response = client.ExecuteAsync<VatLayerResponse>(request).Result;
+                        HttpGetMethod);
+                    var response = client.ExecuteAsync(request).Result;
+var responseData = string.IsNullOrWhiteSpace(response?.Content)
+    ? null
+    : JsonConvert.DeserializeObject<VatLayerResponse>(response.Content);
 
                     if (response.StatusCode == HttpStatusCode.OK)
                     {
-                        if (response.Data != null && response.Data.Valid)
+                        if (responseData != null && responseData.Valid)
                         {
                             var diagnostic =
-                                $"External search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' produced results, CompanyName: '{response.Data.CompanyName}'  VatNumber: '{response.Data.VatNumber}'";
+                                $"External search for Id: '{query.Id}' QueryKey: '{query.QueryKey}' produced results, CompanyName: '{responseData.CompanyName}'  VatNumber: '{responseData.VatNumber}'";
 
                             context.Log.LogInformation(diagnostic);
 
-                            yield return new ExternalSearchQueryResult<VatLayerResponse>(query, response.Data);
+                            yield return new ExternalSearchQueryResult<VatLayerResponse>(query, responseData);
                         }
                         else
                         {
@@ -407,14 +423,21 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
 
             var vat = WebUtility.UrlEncode("IE3539798LH");
             var client = new RestClient("http://www.apilayer.net/api");
-            var request = new RestRequest($"validate?access_key={jobData.ApiToken}&vat_number={vat}&format=1", Method.GET);
+            var request = new RestRequest($"validate?access_key={jobData.ApiToken}&vat_number={vat}&format=1", HttpGetMethod);
 
-            var response = client.ExecuteAsync<VatLayerResponse>(request).Result;
+            var response = client.ExecuteAsync(request).Result;
 
             return ConstructVerifyConnectionResponse(response);
         }
 
-        private ConnectionVerificationResult ConstructVerifyConnectionResponse(IRestResponse<VatLayerResponse> response)
+        // RestSharp 106.x (CluedIn 4.7/4.8) returns IRestResponse; RestSharp 114.x
+        // (CluedIn 5.0+) returns the concrete RestResponse directly.
+        private ConnectionVerificationResult ConstructVerifyConnectionResponse(
+#if CLUEDIN_V50
+            RestResponse response)
+#else
+            IRestResponse response)
+#endif
         {
             var isSuccessResponse = response.IsSuccessful;
             var errorMessageBase = $"{Constants.ProviderName} returned \"{(int)response.StatusCode} {response.StatusDescription}\".";
@@ -423,7 +446,7 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
                 return new ConnectionVerificationResult(false, $"{errorMessageBase} {(!string.IsNullOrWhiteSpace(response.ErrorException.Message) ? response.ErrorException.Message : "This could be due to breaking changes in the external system")}.");
             }
 
-            var responseData = response.Data;
+            var responseData = JsonConvert.DeserializeObject<VatLayerResponse>(response.Content);
             if (responseData?.Valid != true)
             {
                 try
@@ -461,7 +484,12 @@ namespace CluedIn.ExternalSearch.Providers.VatLayer
             return metadata;
         }
 
-        internal static void WaitDueToTooManyRequests(ExecutionContext executionContext, IRestResponse response)
+        internal static void WaitDueToTooManyRequests(ExecutionContext executionContext,
+#if CLUEDIN_V50
+            RestResponse response)
+#else
+            IRestResponse response)
+#endif
         {
             var privateApplicationContext = executionContext.ApplicationContext.Container.Resolve<IPrivateApplicationContext>();
             var lockingScope = privateApplicationContext.CreateLockingScope();
