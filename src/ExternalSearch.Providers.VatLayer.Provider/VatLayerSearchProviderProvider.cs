@@ -134,6 +134,7 @@ namespace CluedIn.Provider.VatLayer
             { "vocabKeyPrefix", VatLayerVocabulary.Organization.KeyPrefix},
             { "autoSubmission", false },
             { "dataSourceSetId", string.Empty },
+            { "fieldGroups", Constants.FieldGroups }, // for UI
         };
     }
 }
